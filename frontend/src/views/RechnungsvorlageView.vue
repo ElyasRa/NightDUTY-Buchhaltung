@@ -337,10 +337,10 @@ function editTemplate(template: InvoiceTemplate) {
 }
 
 function applyBaseTemplate() {
-  // This would apply a base template's config
-  // For now, just show a message
+  // Base template application will be implemented in future enhancement
+  // For now, users can create templates from scratch
   if (selectedBaseTemplate.value) {
-    showToastMessage(`Basis "${selectedBaseTemplate.value}" wird angewendet`, 'info')
+    showToastMessage(`Hinweis: Basis-Templates werden in einem zukünftigen Update unterstützt`, 'info')
   }
 }
 

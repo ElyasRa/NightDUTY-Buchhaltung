@@ -166,7 +166,9 @@ router.delete('/:id', async (req, res) => {
     })
     
     if (template?.is_default) {
-      return res.status(400).json({ error: 'Cannot delete the default template' })
+      return res.status(400).json({ 
+        error: 'Cannot delete the default template. Please set another template as default first.' 
+      })
     }
     
     await prisma.invoiceTemplate.delete({
