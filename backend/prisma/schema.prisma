@@ -208,3 +208,12 @@ model InvoiceTemplate {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 }
+
+model Logo {
+  id          String   @id @default(uuid())
+  name        String
+  filename    String   @unique
+  url         String
+  size        Int
+  uploaded_at DateTime @default(now())
+}

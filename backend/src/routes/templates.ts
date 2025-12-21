@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
+import { randomUUID } from 'crypto'
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -211,18 +212,80 @@ router.put('/:id/set-default', async (req, res) => {
   }
 })
 
-// POST /api/templates/upload-logo - Upload logo
-router.post('/upload-logo', upload.single('logo'), async (req, res) => {
+// POST /api/templates/upload-logo - Upload logo (supports multiple)
+router.post('/upload-logo', upload.array('logos', 10), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' })
+    if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' })
     }
     
-    const logoUrl = `/uploads/logos/${req.file.filename}`
-    res.json({ url: logoUrl, filename: req.file.filename })
+    const uploadedLogos = await Promise.all(
+      req.files.map(async (file) => {
+        const logoId = randomUUID()
+        const logoUrl = `/uploads/logos/${file.filename}`
+        
+        const logo = await prisma.logo.create({
+          data: {
+            id: logoId,
+            name: file.originalname,
+            filename: file.filename,
+            url: logoUrl,
+            size: file.size
+          }
+        })
+        
+        return logo
+      })
+    )
+    
+    res.json({ logos: uploadedLogos })
   } catch (error) {
-    console.error('Error uploading logo:', error)
-    res.status(500).json({ error: 'Failed to upload logo' })
+    console.error('Error uploading logos:', error)
+    res.status(500).json({ error: 'Failed to upload logos' })
+  }
+})
+
+// GET /api/templates/logos - Get all logos
+router.get('/logos', async (req, res) => {
+  try {
+    const logos = await prisma.logo.findMany({
+      orderBy: { uploaded_at: 'desc' }
+    })
+    res.json(logos)
+  } catch (error) {
+    console.error('Error fetching logos:', error)
+    res.status(500).json({ error: 'Failed to fetch logos' })
+  }
+})
+
+// DELETE /api/templates/logos/:id - Delete logo
+router.delete('/logos/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    
+    const logo = await prisma.logo.findUnique({
+      where: { id }
+    })
+    
+    if (!logo) {
+      return res.status(404).json({ error: 'Logo not found' })
+    }
+    
+    // Delete file from filesystem
+    const filePath = path.join(__dirname, '../../public', logo.url)
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath)
+    }
+    
+    // Delete from database
+    await prisma.logo.delete({
+      where: { id }
+    })
+    
+    res.json({ message: 'Logo deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting logo:', error)
+    res.status(500).json({ error: 'Failed to delete logo' })
   }
 })
 
