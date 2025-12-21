@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
-import config from '../config'
+import { API_BASE_URL } from '../config'
 
 export interface InvoiceTemplateConfig {
   logo: {
@@ -96,7 +96,7 @@ export const useTemplateStore = defineStore('templates', {
       this.error = null
       try {
         const token = localStorage.getItem('token')
-        const response = await axios.get(`${config.apiUrl}/api/templates`, {
+        const response = await axios.get(`${API_BASE_URL}/templates`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         this.templates = response.data
@@ -115,7 +115,7 @@ export const useTemplateStore = defineStore('templates', {
       this.error = null
       try {
         const token = localStorage.getItem('token')
-        const response = await axios.get(`${config.apiUrl}/api/templates/${id}`, {
+        const response = await axios.get(`${API_BASE_URL}/templates/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         return response.data
@@ -137,7 +137,7 @@ export const useTemplateStore = defineStore('templates', {
         if (template.id) {
           // Update existing template
           const response = await axios.put(
-            `${config.apiUrl}/api/templates/${template.id}`,
+            `${API_BASE_URL}/templates/${template.id}`,
             template,
             { headers: { Authorization: `Bearer ${token}` } }
           )
@@ -152,7 +152,7 @@ export const useTemplateStore = defineStore('templates', {
         } else {
           // Create new template
           const response = await axios.post(
-            `${config.apiUrl}/api/templates`,
+            `${API_BASE_URL}/templates`,
             template,
             { headers: { Authorization: `Bearer ${token}` } }
           )
@@ -174,7 +174,7 @@ export const useTemplateStore = defineStore('templates', {
       this.error = null
       try {
         const token = localStorage.getItem('token')
-        await axios.delete(`${config.apiUrl}/api/templates/${id}`, {
+        await axios.delete(`${API_BASE_URL}/templates/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         
@@ -199,7 +199,7 @@ export const useTemplateStore = defineStore('templates', {
       try {
         const token = localStorage.getItem('token')
         const response = await axios.put(
-          `${config.apiUrl}/api/templates/${id}/set-default`,
+          `${API_BASE_URL}/templates/${id}/set-default`,
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         )
@@ -231,7 +231,7 @@ export const useTemplateStore = defineStore('templates', {
         formData.append('logo', file)
         
         const response = await axios.post(
-          `${config.apiUrl}/api/templates/upload-logo`,
+          `${API_BASE_URL}/templates/upload-logo`,
           formData,
           {
             headers: {
