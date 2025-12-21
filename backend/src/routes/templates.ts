@@ -219,24 +219,28 @@ router.post('/upload-logo', upload.array('logos', 10), async (req, res) => {
       return res.status(400).json({ error: 'No files uploaded' })
     }
     
-    const uploadedLogos = await Promise.all(
-      req.files.map(async (file) => {
-        const logoId = randomUUID()
-        const logoUrl = `/uploads/logos/${file.filename}`
-        
-        const logo = await prisma.logo.create({
-          data: {
-            id: logoId,
-            name: file.originalname,
-            filename: file.filename,
-            url: logoUrl,
-            size: file.size
-          }
-        })
-        
-        return logo
-      })
-    )
+    // Prepare data for batch insert
+    const logosData = req.files.map(file => ({
+      id: randomUUID(),
+      name: file.originalname,
+      filename: file.filename,
+      url: `/uploads/logos/${file.filename}`,
+      size: file.size
+    }))
+    
+    // Batch insert for better performance
+    await prisma.logo.createMany({
+      data: logosData
+    })
+    
+    // Fetch the created logos to return them
+    const uploadedLogos = await prisma.logo.findMany({
+      where: {
+        filename: {
+          in: req.files.map(f => f.filename)
+        }
+      }
+    })
     
     res.json({ logos: uploadedLogos })
   } catch (error) {

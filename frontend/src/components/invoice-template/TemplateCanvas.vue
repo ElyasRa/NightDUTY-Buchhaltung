@@ -147,7 +147,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import DraggableElement from './DraggableElement.vue'
 import LogoElementRender from './elements/LogoElementRender.vue'
 import TextElementRender from './elements/TextElementRender.vue'
@@ -186,6 +186,11 @@ const emit = defineEmits<{
 
 const canvasArea = ref<HTMLElement | null>(null)
 const zoom = ref(props.zoom)
+
+// Keep zoom in sync with props
+watch(() => props.zoom, (newZoom) => {
+  zoom.value = newZoom
+})
 
 // DIN A4 dimensions at 96 DPI
 const paperWidth = 794

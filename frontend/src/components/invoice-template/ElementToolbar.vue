@@ -48,6 +48,7 @@
 </template>
 
 <script setup lang="ts">
+import { v4 as uuidv4 } from 'uuid'
 import type { 
   TextElement, 
   PlaceholderElement, 
@@ -61,7 +62,7 @@ const emit = defineEmits<{
 
 const addTextElement = () => {
   const textElement: TextElement = {
-    id: `text-${Date.now()}`,
+    id: uuidv4(),
     type: 'text',
     content: 'Neuer Text',
     x: 100,
@@ -78,7 +79,7 @@ const addTextElement = () => {
 
 const addPlaceholderElement = () => {
   const placeholderElement: PlaceholderElement = {
-    id: `placeholder-${Date.now()}`,
+    id: uuidv4(),
     type: 'placeholder',
     placeholder: '{RECHNUNGSNUMMER}',
     x: 100,
@@ -95,7 +96,7 @@ const addPlaceholderElement = () => {
 
 const addLineElement = (orientation: 'horizontal' | 'vertical') => {
   const lineElement: LineElement = {
-    id: `line-${Date.now()}`,
+    id: uuidv4(),
     type: 'line',
     orientation,
     x: 100,
@@ -111,7 +112,7 @@ const addLineElement = (orientation: 'horizontal' | 'vertical') => {
 
 const addTableElement = () => {
   const tableElement: TableElement = {
-    id: `table-${Date.now()}`,
+    id: uuidv4(),
     type: 'table',
     x: 50,
     y: 350,

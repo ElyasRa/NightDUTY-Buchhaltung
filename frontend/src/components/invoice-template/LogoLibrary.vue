@@ -67,6 +67,7 @@
 </template>
 
 <script setup lang="ts">
+import { v4 as uuidv4 } from 'uuid'
 import { ref, onMounted } from 'vue'
 import { useInvoiceTemplateStore } from '../../stores/invoiceTemplate'
 import type { Logo, LogoElement } from '../../stores/invoiceTemplate'
@@ -76,7 +77,7 @@ const store = useInvoiceTemplateStore()
 const uploading = ref(false)
 
 const emit = defineEmits<{
-  logoAdded: [logo: Logo]
+  logoAdded: []
 }>()
 
 onMounted(async () => {
@@ -124,9 +125,9 @@ const addToTemplate = (logo: Logo) => {
     return
   }
 
-  // Create a new logo element
+  // Create a new logo element with UUID
   const logoElement: LogoElement = {
-    id: `logo-${Date.now()}`,
+    id: uuidv4(),
     type: 'logo',
     logoId: logo.id,
     url: logo.url,
@@ -138,7 +139,7 @@ const addToTemplate = (logo: Logo) => {
   }
 
   store.addElement(logoElement)
-  emit('logoAdded', logo)
+  emit('logoAdded')
 }
 
 const deleteLogo = async (logo: Logo) => {

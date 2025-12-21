@@ -316,13 +316,7 @@ const tabs = [
   { id: 'properties', icon: '⚙️', label: 'Eigenschaften' }
 ]
 
-const sortedTemplates = computed(() => {
-  return [...templateStore.templates].sort((a, b) => {
-    if (a.is_default) return -1
-    if (b.is_default) return 1
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  })
-})
+const sortedTemplates = computed(() => templateStore.sortedTemplates)
 
 onMounted(async () => {
   loading.value = true
@@ -334,6 +328,9 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+  
+  // Register keyboard shortcuts
+  document.addEventListener('keydown', handleKeyDown)
 })
 
 function getPreviewStyle(template: InvoiceTemplate) {
@@ -600,10 +597,6 @@ function handleKeyDown(event: KeyboardEvent) {
     }
   }
 }
-
-onMounted(() => {
-  document.addEventListener('keydown', handleKeyDown)
-})
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyDown)

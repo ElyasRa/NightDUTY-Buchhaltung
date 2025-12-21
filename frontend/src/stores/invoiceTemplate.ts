@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
+import { v4 as uuidv4 } from 'uuid'
 import { API_BASE_URL } from '../config'
 
 // Logo interface
@@ -431,7 +432,7 @@ export const useInvoiceTemplateStore = defineStore('invoiceTemplate', {
       
       const duplicate = {
         ...JSON.parse(JSON.stringify(element)),
-        id: `element-${Date.now()}`,
+        id: uuidv4(),
         x: element.x + 20,
         y: element.y + 20,
         zIndex: Math.max(...this.currentTemplate.config.elements.map(el => el.zIndex)) + 1
