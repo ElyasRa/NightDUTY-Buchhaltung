@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nightduty-postgres
+    environment:
+      POSTGRES_USER: nightduty_user
+      POSTGRES_PASSWORD:  nightduty_password
+      POSTGRES_DB: nightduty_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports: 
+      - "5432:5432"
+    networks:
+      - nightduty-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nightduty_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: nightduty-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - nightduty-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nightduty-backend
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://nightduty_user:nightduty_password@postgres:5432/nightduty_db
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis: 
+        condition: service_healthy
+    networks:
+      - nightduty-network
+    volumes: 
+      - ./backend/public/uploads:/app/public/uploads
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nightduty-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - nightduty-network
+
+volumes:
+  postgres_data: 
+
+networks:
+  nightduty-network:
+    driver: bridge

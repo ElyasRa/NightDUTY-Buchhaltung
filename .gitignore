@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment variables (SENSIBEL!)
+.env
+**/.env
+. env.local
+.env. *. local
+
+# Build outputs
+dist/
+build/
+. next/
+out/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# PM2
+. pm2/
+**/.pm2/
+
+# IDEs
+.vscode/
+.idea/
+*. swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads & Generated Files
+**/public/uploads/
+**/generated/
+
+# Database
+*.db
+*.sqlite
+
+# Backup files
+*.backup
+*.tmp
+*. bak
+
+# Prisma
+**/prisma/migrations/
