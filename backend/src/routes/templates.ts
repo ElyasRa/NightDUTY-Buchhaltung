@@ -4,6 +4,7 @@ import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
 import { randomUUID } from 'crypto'
+import { authenticateToken } from '../middleware/auth'
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -43,7 +44,7 @@ const upload = multer({
 })
 
 // GET /api/templates - List all templates
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const templates = await prisma.invoiceTemplate.findMany({
       orderBy: [
@@ -59,7 +60,7 @@ router.get('/', async (req, res) => {
 })
 
 // GET /api/templates/:id - Get one template
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params
     const templateId = parseInt(id)
@@ -84,7 +85,7 @@ router.get('/:id', async (req, res) => {
 })
 
 // POST /api/templates - Create new template
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { name, config, is_default, created_by } = req.body
     
@@ -113,7 +114,7 @@ router.post('/', async (req, res) => {
 })
 
 // PUT /api/templates/:id - Update template
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params
     const templateId = parseInt(id)
@@ -152,7 +153,7 @@ router.put('/:id', async (req, res) => {
 })
 
 // DELETE /api/templates/:id - Delete template
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params
     const templateId = parseInt(id)
@@ -184,7 +185,7 @@ router.delete('/:id', async (req, res) => {
 })
 
 // PUT /api/templates/:id/set-default - Set template as default
-router.put('/:id/set-default', async (req, res) => {
+router.put('/:id/set-default', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params
     const templateId = parseInt(id)
@@ -213,7 +214,7 @@ router.put('/:id/set-default', async (req, res) => {
 })
 
 // POST /api/templates/upload-logo - Upload logo (supports multiple)
-router.post('/upload-logo', upload.array('logos', 10), async (req, res) => {
+router.post('/upload-logo', authenticateToken, upload.array('logos', 10), async (req, res) => {
   try {
     if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' })
@@ -250,7 +251,7 @@ router.post('/upload-logo', upload.array('logos', 10), async (req, res) => {
 })
 
 // GET /api/templates/logos - Get all logos
-router.get('/logos', async (req, res) => {
+router.get('/logos', authenticateToken, async (req, res) => {
   try {
     const logos = await prisma.logo.findMany({
       orderBy: { uploaded_at: 'desc' }
@@ -263,7 +264,7 @@ router.get('/logos', async (req, res) => {
 })
 
 // DELETE /api/templates/logos/:id - Delete logo
-router.delete('/logos/:id', async (req, res) => {
+router.delete('/logos/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params
     
