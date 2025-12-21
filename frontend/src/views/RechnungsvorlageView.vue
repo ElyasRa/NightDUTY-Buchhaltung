@@ -111,7 +111,7 @@
             </button>
           </div>
           
-          <div class="editor-layout">
+          <div v-if="editingTemplate && editingTemplate.config" class="editor-layout">
             <!-- Left Sidebar: Template List -->
             <div class="editor-sidebar">
               <h3>Vorlagenname</h3>
@@ -243,7 +243,7 @@ const loading = ref(false)
 const showDeleteModal = ref(false)
 const showEditorModal = ref(false)
 const templateToDelete = ref<InvoiceTemplate | null>(null)
-const editingTemplate = ref<any>(null)
+const editingTemplate = ref<Partial<InvoiceTemplate> | null>(null)
 const selectedBaseTemplate = ref('')
 const saving = ref(false)
 const showToast = ref(false)
@@ -264,15 +264,15 @@ onMounted(async () => {
 
 function getPreviewStyle(template: InvoiceTemplate) {
   return {
-    borderTop: `4px solid ${template.config.colors.primary}`,
-    background: template.config.colors.background
+    borderTop: `4px solid ${template.config?.colors?.primary || '#1e3a8a'}`,
+    background: template.config?.colors?.background || '#ffffff'
   }
 }
 
 function getPaperStyle() {
-  if (!editingTemplate.value) return {}
+  if (!editingTemplate.value?.config) return {}
   return {
-    background: editingTemplate.value.config.colors.background
+    background: editingTemplate.value.config.colors?.background || '#ffffff'
   }
 }
 
@@ -351,7 +351,7 @@ function closeEditor() {
 }
 
 async function saveTemplate() {
-  if (!editingTemplate.value.name.trim()) {
+  if (!editingTemplate.value || !editingTemplate.value.name?.trim()) {
     showToastMessage('Bitte geben Sie einen Namen ein', 'error')
     return
   }

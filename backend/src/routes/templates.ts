@@ -7,6 +7,9 @@ import fs from 'fs'
 const router = express.Router()
 const prisma = new PrismaClient()
 
+// Configuration constants
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+
 // Configure multer for logo uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -24,7 +27,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: MAX_FILE_SIZE },
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif/
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
@@ -33,7 +36,7 @@ const upload = multer({
     if (mimetype && extname) {
       return cb(null, true)
     } else {
-      cb(new Error('Only image files are allowed!'))
+      cb(new Error('Invalid file type. Only JPEG, PNG, and GIF images are allowed.'))
     }
   }
 })
@@ -58,8 +61,14 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params
+    const templateId = parseInt(id)
+    
+    if (isNaN(templateId)) {
+      return res.status(400).json({ error: 'Invalid template ID' })
+    }
+    
     const template = await prisma.invoiceTemplate.findUnique({
-      where: { id: parseInt(id) }
+      where: { id: templateId }
     })
     
     if (!template) {
@@ -106,6 +115,12 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params
+    const templateId = parseInt(id)
+    
+    if (isNaN(templateId)) {
+      return res.status(400).json({ error: 'Invalid template ID' })
+    }
+    
     const { name, config, is_default } = req.body
     
     // If this template is being set as default, unset all others
@@ -113,14 +128,14 @@ router.put('/:id', async (req, res) => {
       await prisma.invoiceTemplate.updateMany({
         where: { 
           is_default: true,
-          id: { not: parseInt(id) }
+          id: { not: templateId }
         },
         data: { is_default: false }
       })
     }
     
     const template = await prisma.invoiceTemplate.update({
-      where: { id: parseInt(id) },
+      where: { id: templateId },
       data: {
         name,
         config,
@@ -139,10 +154,15 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params
+    const templateId = parseInt(id)
+    
+    if (isNaN(templateId)) {
+      return res.status(400).json({ error: 'Invalid template ID' })
+    }
     
     // Check if it's the default template
     const template = await prisma.invoiceTemplate.findUnique({
-      where: { id: parseInt(id) }
+      where: { id: templateId }
     })
     
     if (template?.is_default) {
@@ -150,7 +170,7 @@ router.delete('/:id', async (req, res) => {
     }
     
     await prisma.invoiceTemplate.delete({
-      where: { id: parseInt(id) }
+      where: { id: templateId }
     })
     
     res.json({ message: 'Template deleted successfully' })
@@ -164,6 +184,11 @@ router.delete('/:id', async (req, res) => {
 router.put('/:id/set-default', async (req, res) => {
   try {
     const { id } = req.params
+    const templateId = parseInt(id)
+    
+    if (isNaN(templateId)) {
+      return res.status(400).json({ error: 'Invalid template ID' })
+    }
     
     // Unset all other defaults
     await prisma.invoiceTemplate.updateMany({
@@ -173,7 +198,7 @@ router.put('/:id/set-default', async (req, res) => {
     
     // Set this one as default
     const template = await prisma.invoiceTemplate.update({
-      where: { id: parseInt(id) },
+      where: { id: templateId },
       data: { is_default: true }
     })
     
