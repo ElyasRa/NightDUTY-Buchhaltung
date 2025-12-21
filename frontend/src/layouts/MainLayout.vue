@@ -270,6 +270,17 @@
             </div>
             <span class="nav-text">Einstellungen</span>
           </router-link>
+
+          <!-- Rechnungsvorlage -->
+          <router-link to="/rechnungsvorlage" class="nav-item">
+            <div class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/>
+                <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </div>
+            <span class="nav-text">Rechnungsvorlage</span>
+          </router-link>
         </div>
 
         <button @click="logout" class="logout-btn">
