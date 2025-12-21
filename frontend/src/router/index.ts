@@ -110,6 +110,12 @@ const router = createRouter({
       name: 'Stundenausgleich',
       component: StundenausgleichView,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/rechnungsvorlage',
+      name: 'Rechnungsvorlage',
+      component: () => import('../views/RechnungsvorlageView.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })
