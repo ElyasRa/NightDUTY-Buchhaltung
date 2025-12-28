@@ -178,14 +178,16 @@ const layers = computed(() => {
   const objects = canvas.getObjects()
   return objects
     .filter(obj => {
-      // @ts-ignore - data property exists but not typed
-      return !(obj.data && obj.data.isGrid)
+      // Filter out grid lines - Fabric.js allows custom data property
+      // @ts-expect-error - data property is a custom addition
+      const isGridLine = obj.data?.isGrid === true
+      return !isGridLine
     })
     .map((obj, index) => ({
-      // @ts-ignore - data property exists but not typed
+      // @ts-expect-error - data property is a custom addition
       id: obj.data?.id || `obj-${index}`,
       type: obj.type || 'unknown',
-      // @ts-ignore - data property exists but not typed
+      // @ts-expect-error - data property is a custom addition
       name: obj.data?.name,
       visible: obj.visible !== false,
       locked: obj.selectable === false,
@@ -343,7 +345,8 @@ function selectLayer(id: string) {
   if (!canvas) return
   const objects = canvas.getObjects()
   const obj = objects.find(o => {
-    // @ts-ignore - data property exists but not typed
+    // Fabric.js allows custom data property
+    // @ts-expect-error - data property is a custom addition
     return o.data?.id === id || `obj-${objects.indexOf(o)}` === id
   })
   if (obj) {
@@ -356,7 +359,8 @@ function toggleVisibility(id: string) {
   if (!canvas) return
   const objects = canvas.getObjects()
   const obj = objects.find(o => {
-    // @ts-ignore - data property exists but not typed
+    // Fabric.js allows custom data property
+    // @ts-expect-error - data property is a custom addition
     return o.data?.id === id || `obj-${objects.indexOf(o)}` === id
   })
   if (obj) {
@@ -369,7 +373,8 @@ function toggleLock(id: string) {
   if (!canvas) return
   const objects = canvas.getObjects()
   const obj = objects.find(o => {
-    // @ts-ignore - data property exists but not typed
+    // Fabric.js allows custom data property
+    // @ts-expect-error - data property is a custom addition
     return o.data?.id === id || `obj-${objects.indexOf(o)}` === id
   })
   if (obj) {
@@ -482,14 +487,16 @@ function togglePreview() {
   // In preview mode, disable selection and editing
   const objects = canvas.getObjects()
   objects.forEach(obj => {
-    // Skip grid lines
-    // @ts-ignore - data property exists but not typed
-    if (obj.data && obj.data.isGrid) return
+    // Skip grid lines - Fabric.js allows custom data property
+    // @ts-expect-error - data property is a custom addition
+    const isGridLine = obj.data?.isGrid === true
     
-    obj.selectable = !previewMode.value
-    obj.evented = !previewMode.value
-    obj.hasControls = !previewMode.value
-    obj.hasBorders = !previewMode.value
+    if (!isGridLine) {
+      obj.selectable = !previewMode.value
+      obj.evented = !previewMode.value
+      obj.hasControls = !previewMode.value
+      obj.hasBorders = !previewMode.value
+    }
   })
   
   canvas.discardActiveObject()

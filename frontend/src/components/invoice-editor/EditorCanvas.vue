@@ -58,22 +58,28 @@ onMounted(() => {
 
   // Configure default controls for all objects
   canvas.on('object:added', (e) => {
-    if (e.target && !e.target.data?.isGrid) {
-      // Ensure object is movable and has resize handles
-      e.target.set({
-        lockMovementX: false,
-        lockMovementY: false,
-        lockScalingX: false,
-        lockScalingY: false,
-        lockRotation: false,
-        hasControls: true,
-        hasBorders: true,
-        borderColor: '#ff006e',
-        cornerColor: '#ff006e',
-        cornerSize: 10,
-        transparentCorners: false,
-        cornerStyle: 'circle'
-      })
+    if (e.target) {
+      // Check if object has grid marker (avoid adding controls to grid lines)
+      // @ts-expect-error - Fabric.js allows custom data property
+      const isGridLine = e.target.data?.isGrid === true
+      
+      if (!isGridLine) {
+        // Ensure object is movable and has resize handles
+        e.target.set({
+          lockMovementX: false,
+          lockMovementY: false,
+          lockScalingX: false,
+          lockScalingY: false,
+          lockRotation: false,
+          hasControls: true,
+          hasBorders: true,
+          borderColor: '#ff006e',
+          cornerColor: '#ff006e',
+          cornerSize: 10,
+          transparentCorners: false,
+          cornerStyle: 'circle'
+        })
+      }
     }
   })
 
@@ -157,7 +163,8 @@ function addGrid() {
       selectable: false,
       evented: false
     })
-    // @ts-ignore - data property exists but not typed
+    // Fabric.js allows custom data property
+    // @ts-expect-error - data property is a custom addition
     line.data = { isGrid: true }
     canvas.add(line)
     canvas.sendObjectToBack(line)
@@ -171,7 +178,8 @@ function addGrid() {
       selectable: false,
       evented: false
     })
-    // @ts-ignore - data property exists but not typed
+    // Fabric.js allows custom data property
+    // @ts-expect-error - data property is a custom addition
     line.data = { isGrid: true }
     canvas.add(line)
     canvas.sendObjectToBack(line)
@@ -184,8 +192,10 @@ function removeGrid() {
   if (!canvas) return
   const objects = canvas.getObjects()
   objects.forEach(obj => {
-    // @ts-ignore - data property exists but not typed
-    if (obj.data && obj.data.isGrid) {
+    // Fabric.js allows custom data property
+    // @ts-expect-error - data property is a custom addition
+    const isGridLine = obj.data?.isGrid === true
+    if (isGridLine) {
       canvas!.remove(obj)
     }
   })
@@ -377,7 +387,7 @@ function clear() {
   canvas.clear()
   canvas.backgroundColor = props.backgroundColor
   if (props.showGrid) addGrid()
-  canvas.renderAll()
+  // Note: canvas.clear() triggers a re-render automatically
 }
 
 function loadNightDutyTemplate() {
