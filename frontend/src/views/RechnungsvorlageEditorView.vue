@@ -139,7 +139,7 @@ let canvas: Canvas | null = null
 
 const templateId = ref<number | null>(null)
 const templateName = ref('Neue Vorlage')
-const selectedObject = ref<FabricObject | null>(null)
+const selectedObject = ref<any | null>(null)
 const showGrid = ref(true)
 const snapToGrid = ref(true)
 const gridSize = ref(10)
@@ -163,10 +163,15 @@ const layers = computed(() => {
   
   const objects = canvas.getObjects()
   return objects
-    .filter(obj => !(obj.data && obj.data.isGrid))
+    .filter(obj => {
+      // @ts-ignore - data property exists but not typed
+      return !(obj.data && obj.data.isGrid)
+    })
     .map((obj, index) => ({
+      // @ts-ignore - data property exists but not typed
       id: obj.data?.id || `obj-${index}`,
       type: obj.type || 'unknown',
+      // @ts-ignore - data property exists but not typed
       name: obj.data?.name,
       visible: obj.visible !== false,
       locked: obj.selectable === false,
@@ -308,14 +313,14 @@ function deleteSelected() {
 
 function bringForward() {
   if (!selectedObject.value || !canvas) return
-  canvas.bringForward(selectedObject.value)
+  canvas.bringObjectForward(selectedObject.value)
   canvas.renderAll()
   saveToHistory()
 }
 
 function sendBackward() {
   if (!selectedObject.value || !canvas) return
-  canvas.sendBackwards(selectedObject.value)
+  canvas.sendObjectBackwards(selectedObject.value)
   canvas.renderAll()
   saveToHistory()
 }
@@ -323,7 +328,10 @@ function sendBackward() {
 function selectLayer(id: string) {
   if (!canvas) return
   const objects = canvas.getObjects()
-  const obj = objects.find(o => o.data?.id === id || `obj-${objects.indexOf(o)}` === id)
+  const obj = objects.find(o => {
+    // @ts-ignore - data property exists but not typed
+    return o.data?.id === id || `obj-${objects.indexOf(o)}` === id
+  })
   if (obj) {
     canvas.setActiveObject(obj)
     canvas.renderAll()
@@ -333,7 +341,10 @@ function selectLayer(id: string) {
 function toggleVisibility(id: string) {
   if (!canvas) return
   const objects = canvas.getObjects()
-  const obj = objects.find(o => o.data?.id === id || `obj-${objects.indexOf(o)}` === id)
+  const obj = objects.find(o => {
+    // @ts-ignore - data property exists but not typed
+    return o.data?.id === id || `obj-${objects.indexOf(o)}` === id
+  })
   if (obj) {
     obj.visible = !obj.visible
     canvas.renderAll()
@@ -343,7 +354,10 @@ function toggleVisibility(id: string) {
 function toggleLock(id: string) {
   if (!canvas) return
   const objects = canvas.getObjects()
-  const obj = objects.find(o => o.data?.id === id || `obj-${objects.indexOf(o)}` === id)
+  const obj = objects.find(o => {
+    // @ts-ignore - data property exists but not typed
+    return o.data?.id === id || `obj-${objects.indexOf(o)}` === id
+  })
   if (obj) {
     obj.selectable = !obj.selectable
     obj.evented = obj.selectable

@@ -60,6 +60,7 @@ interface Template {
   is_default: boolean
   config: any
   created_at: string
+  updated_at: string
 }
 
 interface Props {

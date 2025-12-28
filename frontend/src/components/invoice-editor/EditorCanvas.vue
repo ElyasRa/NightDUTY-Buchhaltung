@@ -129,11 +129,12 @@ function addGrid() {
       stroke: '#e5e5e5',
       strokeWidth: 1,
       selectable: false,
-      evented: false,
-      data: { isGrid: true }
+      evented: false
     })
+    // @ts-ignore - data property exists but not typed
+    line.data = { isGrid: true }
     canvas.add(line)
-    canvas.sendToBack(line)
+    canvas.sendObjectToBack(line)
   }
 
   // Add horizontal lines
@@ -142,11 +143,12 @@ function addGrid() {
       stroke: '#e5e5e5',
       strokeWidth: 1,
       selectable: false,
-      evented: false,
-      data: { isGrid: true }
+      evented: false
     })
+    // @ts-ignore - data property exists but not typed
+    line.data = { isGrid: true }
     canvas.add(line)
-    canvas.sendToBack(line)
+    canvas.sendObjectToBack(line)
   }
 
   canvas.renderAll()
@@ -156,6 +158,7 @@ function removeGrid() {
   if (!canvas) return
   const objects = canvas.getObjects()
   objects.forEach(obj => {
+    // @ts-ignore - data property exists but not typed
     if (obj.data && obj.data.isGrid) {
       canvas!.remove(obj)
     }

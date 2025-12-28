@@ -100,10 +100,9 @@ function getLayerIcon(type: string): string {
     'image': '🖼️',
     'companyData': '🏢',
     'logo': '🎨',
-    'table': '📋',
-    'default': '📄'
+    'table': '📋'
   }
-  return icons[type] || icons.default
+  return icons[type] || '📄'
 }
 
 function getLayerName(layer: Layer): string {
