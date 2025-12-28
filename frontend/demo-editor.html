@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIGHTDUTY Template Editor Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/fabric@6.9.1/dist/index.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 0, 110, 0.3);
+        }
+        
+        .header h1 {
+            background: linear-gradient(135deg, #ff006e 0%, #8338ec 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 15px;
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #ff006e 0%, #8338ec 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 0, 110, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(30, 58, 138, 0.3);
+            border: 1px solid rgba(30, 58, 138, 0.6);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(30, 58, 138, 0.5);
+        }
+        
+        .btn-success {
+            background: rgba(16, 185, 129, 0.3);
+            border: 1px solid rgba(16, 185, 129, 0.6);
+            color: #10b981;
+        }
+        
+        .canvas-container {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 600px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .canvas-wrapper {
+            background: white;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(30, 58, 138, 0.2);
+            border: 1px solid rgba(30, 58, 138, 0.4);
+            border-radius: 8px;
+        }
+        
+        .info h3 {
+            color: #ff006e;
+            margin-bottom: 10px;
+        }
+        
+        .info ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+        
+        .info li {
+            margin: 5px 0;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .info li::before {
+            content: "✓ ";
+            color: #10b981;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌙 NIGHTDUTY Rechnungsvorlagen Editor</h1>
+            <div style="color: rgba(255, 255, 255, 0.6);">
+                Fabric.js v6.9.1 Demo
+            </div>
+        </div>
+        
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="loadNightDutyTemplate()">
+                📄 NIGHTDUTY Vorlage laden
+            </button>
+            <button class="btn btn-secondary" onclick="addText()">
+                📝 Text hinzufügen
+            </button>
+            <button class="btn btn-secondary" onclick="addRectangle()">
+                ▭ Rechteck
+            </button>
+            <button class="btn btn-secondary" onclick="addCircle()">
+                ⭕ Kreis
+            </button>
+            <button class="btn btn-secondary" onclick="addLine()">
+                ─ Linie
+            </button>
+            <button class="btn btn-success" onclick="togglePreview()">
+                👁 Vorschau
+            </button>
+            <button class="btn btn-secondary" onclick="clearCanvas()">
+                🗑 Löschen
+            </button>
+            <button class="btn btn-secondary" onclick="deleteSelected()">
+                ❌ Auswahl löschen
+            </button>
+        </div>
+        
+        <div class="canvas-container">
+            <div class="canvas-wrapper">
+                <canvas id="canvas"></canvas>
+            </div>
+        </div>
+        
+        <div class="info">
+            <h3>✨ Features demonstriert:</h3>
+            <ul>
+                <li>Alle Elemente sind verschiebbar (Drag & Drop)</li>
+                <li>Resize-Handles an allen Ecken (8 Kontrollpunkte)</li>
+                <li>Rotation möglich (grüner Punkt über Element)</li>
+                <li>NIGHTDUTY Standardvorlage mit professionellem Layout</li>
+                <li>Vorschau-Modus (deaktiviert Bearbeitung)</li>
+                <li>Mehrfachauswahl mit Shift + Klick</li>
+                <li>Tastenkombinationen: Delete für Löschen, Pfeiltasten zum Verschieben</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        let canvas;
+        let previewMode = false;
+        
+        // Initialize Fabric.js canvas
+        function initCanvas() {
+            canvas = new fabric.Canvas('canvas', {
+                width: 794,  // A4 width at 96 DPI
+                height: 1123, // A4 height at 96 DPI
+                backgroundColor: '#ffffff',
+                selection: true,
+                preserveObjectStacking: true,
+                uniformScaling: false,
+                centeredRotation: true,
+                centeredScaling: false
+            });
+            
+            // Configure default controls for all objects
+            canvas.on('object:added', (e) => {
+                if (e.target) {
+                    e.target.set({
+                        lockMovementX: false,
+                        lockMovementY: false,
+                        lockScalingX: false,
+                        lockScalingY: false,
+                        lockRotation: false,
+                        hasControls: true,
+                        hasBorders: true,
+                        borderColor: '#ff006e',
+                        cornerColor: '#ff006e',
+                        cornerSize: 10,
+                        transparentCorners: false,
+                        cornerStyle: 'circle'
+                    });
+                }
+            });
+            
+            // Add grid
+            addGrid();
+        }
+        
+        function addGrid() {
+            const gridSize = 10;
+            const width = 794;
+            const height = 1123;
+            
+            // Add vertical lines
+            for (let i = 0; i < width / gridSize; i++) {
+                const line = new fabric.Line([i * gridSize, 0, i * gridSize, height], {
+                    stroke: '#e5e5e5',
+                    strokeWidth: 1,
+                    selectable: false,
+                    evented: false
+                });
+                canvas.add(line);
+                canvas.sendObjectToBack(line);
+            }
+            
+            // Add horizontal lines
+            for (let i = 0; i < height / gridSize; i++) {
+                const line = new fabric.Line([0, i * gridSize, width, i * gridSize], {
+                    stroke: '#e5e5e5',
+                    strokeWidth: 1,
+                    selectable: false,
+                    evented: false
+                });
+                canvas.add(line);
+                canvas.sendObjectToBack(line);
+            }
+            
+            canvas.renderAll();
+        }
+        
+        function loadNightDutyTemplate() {
+            clearCanvas();
+            
+            // Add NIGHTDUTY header text
+            const headerText = new fabric.IText('NIGHTDUTY', {
+                left: 50,
+                top: 40,
+                fontSize: 32,
+                fontWeight: 'bold',
+                fill: '#1e3a8a',
+                fontFamily: 'Arial'
+            });
+            canvas.add(headerText);
+            
+            // Add company info
+            const companyInfo = new fabric.IText('Firma GmbH\nMusterstraße 123\n12345 Musterstadt', {
+                left: 50,
+                top: 100,
+                fontSize: 12,
+                fill: '#333333',
+                fontFamily: 'Arial'
+            });
+            canvas.add(companyInfo);
+            
+            // Add invoice title
+            const invoiceTitle = new fabric.IText('RECHNUNG', {
+                left: 50,
+                top: 250,
+                fontSize: 24,
+                fontWeight: 'bold',
+                fill: '#1e3a8a',
+                fontFamily: 'Arial'
+            });
+            canvas.add(invoiceTitle);
+            
+            // Add customer label
+            const customerLabel = new fabric.IText('Rechnungsempfänger:', {
+                left: 50,
+                top: 300,
+                fontSize: 12,
+                fontWeight: 'bold',
+                fill: '#000000',
+                fontFamily: 'Arial'
+            });
+            canvas.add(customerLabel);
+            
+            // Add customer address
+            const customerAddress = new fabric.IText('Kunde Name\nKundenstraße 456\n12345 Stadt', {
+                left: 50,
+                top: 320,
+                fontSize: 12,
+                fill: '#333333',
+                fontFamily: 'Arial'
+            });
+            canvas.add(customerAddress);
+            
+            // Add info box
+            const infoBox = new fabric.Rect({
+                left: 450,
+                top: 250,
+                width: 300,
+                height: 120,
+                fill: '#f0f0f0',
+                stroke: '#1e3a8a',
+                strokeWidth: 2
+            });
+            canvas.add(infoBox);
+            
+            // Add invoice info
+            const invoiceInfo = new fabric.IText('Rechnungsnummer: RE-2025-001\nDatum: 28.12.2025\nFälligkeit: 11.01.2026\n\nKundennummer: K-12345', {
+                left: 460,
+                top: 260,
+                fontSize: 12,
+                fill: '#000000',
+                fontFamily: 'Arial'
+            });
+            canvas.add(invoiceInfo);
+            
+            // Add table header
+            const tableHeader = new fabric.Rect({
+                left: 50,
+                top: 450,
+                width: 700,
+                height: 30,
+                fill: '#1e3a8a'
+            });
+            canvas.add(tableHeader);
+            
+            // Add table header text
+            const tableHeaderText = new fabric.IText('Position                  Beschreibung                            Menge    Preis      Summe', {
+                left: 60,
+                top: 458,
+                fontSize: 11,
+                fontWeight: 'bold',
+                fill: '#ffffff',
+                fontFamily: 'Arial'
+            });
+            canvas.add(tableHeaderText);
+            
+            // Add sample line item
+            const lineItem1 = new fabric.IText('1    Nachtdienst 01.12.2025                               1      150,00 €    150,00 €', {
+                left: 60,
+                top: 495,
+                fontSize: 11,
+                fill: '#000000',
+                fontFamily: 'Arial'
+            });
+            canvas.add(lineItem1);
+            
+            // Add separator line
+            const separatorLine = new fabric.Line([50, 480, 750, 480], {
+                stroke: '#cccccc',
+                strokeWidth: 1
+            });
+            canvas.add(separatorLine);
+            
+            // Add totals box
+            const totalsBox = new fabric.Rect({
+                left: 550,
+                top: 900,
+                width: 200,
+                height: 120,
+                fill: '#f9f9f9',
+                stroke: '#1e3a8a',
+                strokeWidth: 1
+            });
+            canvas.add(totalsBox);
+            
+            // Add totals text
+            const totalsText = new fabric.IText('Zwischensumme:  150,00 €\nMwSt. 19%:           28,50 €\n\nGesamtbetrag:     178,50 €', {
+                left: 560,
+                top: 910,
+                fontSize: 12,
+                fill: '#000000',
+                fontFamily: 'Arial'
+            });
+            canvas.add(totalsText);
+            
+            // Add footer
+            const footerText = new fabric.IText('Bankverbindung: IBAN DE00 0000 0000 0000 0000 00 | BIC: AAABBB11 | USt-ID: DE123456789\nVielen Dank für Ihr Vertrauen!', {
+                left: 50,
+                top: 1060,
+                fontSize: 10,
+                fill: '#666666',
+                fontFamily: 'Arial'
+            });
+            canvas.add(footerText);
+            
+            // Add decorative top line
+            const topLine = new fabric.Rect({
+                left: 0,
+                top: 0,
+                width: 794,
+                height: 5,
+                fill: '#ff006e',
+                selectable: true
+            });
+            canvas.add(topLine);
+            canvas.sendObjectToBack(topLine);
+            
+            canvas.renderAll();
+        }
+        
+        function addText() {
+            const text = new fabric.IText('Neuer Text', {
+                left: 100,
+                top: 100,
+                fontSize: 20,
+                fill: '#000000',
+                fontFamily: 'Arial'
+            });
+            canvas.add(text);
+            canvas.setActiveObject(text);
+        }
+        
+        function addRectangle() {
+            const rect = new fabric.Rect({
+                left: 100,
+                top: 100,
+                width: 100,
+                height: 100,
+                fill: '#1e3a8a'
+            });
+            canvas.add(rect);
+            canvas.setActiveObject(rect);
+        }
+        
+        function addCircle() {
+            const circle = new fabric.Circle({
+                left: 100,
+                top: 100,
+                radius: 50,
+                fill: '#ff006e'
+            });
+            canvas.add(circle);
+            canvas.setActiveObject(circle);
+        }
+        
+        function addLine() {
+            const line = new fabric.Line([50, 50, 200, 50], {
+                stroke: '#000000',
+                strokeWidth: 2
+            });
+            canvas.add(line);
+            canvas.setActiveObject(line);
+        }
+        
+        function togglePreview() {
+            previewMode = !previewMode;
+            
+            const objects = canvas.getObjects();
+            objects.forEach(obj => {
+                obj.selectable = !previewMode;
+                obj.evented = !previewMode;
+                obj.hasControls = !previewMode;
+                obj.hasBorders = !previewMode;
+            });
+            
+            canvas.discardActiveObject();
+            canvas.renderAll();
+            
+            alert(previewMode ? 'Vorschaumodus aktiviert' : 'Bearbeitungsmodus aktiviert');
+        }
+        
+        function clearCanvas() {
+            canvas.clear();
+            canvas.backgroundColor = '#ffffff';
+            addGrid();
+            canvas.renderAll();
+        }
+        
+        function deleteSelected() {
+            const activeObjects = canvas.getActiveObjects();
+            if (activeObjects.length) {
+                activeObjects.forEach(obj => canvas.remove(obj));
+                canvas.discardActiveObject();
+                canvas.renderAll();
+            }
+        }
+        
+        // Initialize on page load
+        window.onload = function() {
+            initCanvas();
+        };
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Delete') {
+                deleteSelected();
+            }
+        });
+    </script>
+</body>
+</html>
