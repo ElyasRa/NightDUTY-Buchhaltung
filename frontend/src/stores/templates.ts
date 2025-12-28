@@ -1,34 +1,43 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 import { API_BASE_URL } from '../config'
+import type { TemplateConfig } from './invoiceTemplate'
 
 export interface InvoiceTemplateConfig {
-  logo: {
+  logo?: {
     x: number
     y: number
     width: number
     height: number
     url: string
   }
-  companyData: {
+  logos?: Array<{
+    id: string
     x: number
     y: number
+    width: number
+    height: number
+    url: string
+  }>
+  companyData?: {
+    x?: number
+    y?: number
     name: string
     address: string
     city: string
     phone: string
     email: string
     website: string
-    fontSize: number
-    color: string
+    fontSize?: number
+    color?: string
   }
-  bankDetails: {
-    x: number
-    y: number
+  bankDetails?: {
+    x?: number
+    y?: number
     iban: string
     bic: string
     bank: string
-    fontSize: number
+    fontSize?: number
   }
   colors: {
     primary: string
@@ -36,7 +45,7 @@ export interface InvoiceTemplateConfig {
     text: string
     background: string
   }
-  table: {
+  table?: {
     x: number
     y: number
     width: number
@@ -44,9 +53,9 @@ export interface InvoiceTemplateConfig {
     headerText: string
     rowBg: string
     alternateRowBg: string
-    columns: Array<{ name: string; width: string }>
+    columns: Array<{ name: string; width: string | number }>
   }
-  footer: {
+  footer?: {
     x: number
     y: number
     width: number
@@ -54,13 +63,20 @@ export interface InvoiceTemplateConfig {
     fontSize: number
     color: string
   }
+  // New format support
+  elements?: any[]
+  grid?: {
+    enabled: boolean
+    size: number
+    snap: boolean
+  }
 }
 
 export interface InvoiceTemplate {
   id: number
   name: string
   is_default: boolean
-  config: InvoiceTemplateConfig
+  config: InvoiceTemplateConfig | TemplateConfig
   created_by?: string
   created_at: string
   updated_at: string
