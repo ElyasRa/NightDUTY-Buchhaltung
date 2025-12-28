@@ -32,9 +32,6 @@ async function updateExistingTemplate() {
         ]
       }
 
-      // Altes Logo-Format entfernen (optional, für sauberere Daten)
-      // delete updatedConfig.logo
-
       await prisma.invoiceTemplate.update({
         where: { id: 1 },
         data: {

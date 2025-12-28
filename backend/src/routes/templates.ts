@@ -53,10 +53,11 @@ router.get('/', authenticateToken, async (req, res) => {
       ]
     })
     
-    // Legacy-Format konvertieren für alle Templates
+    // Legacy-Format konvertieren für alle Templates (non-destructive)
     const convertedTemplates = templates.map(template => {
       const config = template.config as any
       if (config.logo && !config.logos) {
+        // Add new format while keeping old format for backward compatibility
         config.logos = [{
           id: 'logo-main',
           x: config.logo.x,
@@ -67,7 +68,7 @@ router.get('/', authenticateToken, async (req, res) => {
           draggable: true,
           resizable: true
         }]
-        delete config.logo
+        // Keep old format for backward compatibility
         template.config = config
       }
       return template
@@ -101,6 +102,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     // Legacy-Format konvertieren (altes "logo" → neues "logos" Array)
     const config = template.config as any
     if (config.logo && !config.logos) {
+      // Add new format while keeping old format for backward compatibility
       config.logos = [{
         id: 'logo-main',
         x: config.logo.x,
@@ -111,8 +113,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
         draggable: true,
         resizable: true
       }]
-      // Keep old format for backward compatibility, but don't send it
-      delete config.logo
+      // Keep old format for backward compatibility
       template.config = config
     }
     

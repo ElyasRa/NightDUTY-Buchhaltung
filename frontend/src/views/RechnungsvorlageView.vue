@@ -425,15 +425,15 @@ function editTemplate(template: InvoiceTemplate) {
     
     // Convert logos array (new format) to elements
     if (templateConfig.logos && Array.isArray(templateConfig.logos)) {
-      migratedConfig.elements = templateConfig.logos.map((logo: any) => ({
-        id: logo.id || `logo-${Date.now()}`,
+      migratedConfig.elements = templateConfig.logos.map((logo: any, index: number) => ({
+        id: logo.id || `logo-${crypto.randomUUID()}`,
         type: 'logo' as const,
         x: logo.x,
         y: logo.y,
         width: logo.width,
         height: logo.height,
-        zIndex: 1,
-        logoId: logo.id || `logo-${Date.now()}`,
+        zIndex: index + 1,
+        logoId: logo.id || `logo-${crypto.randomUUID()}`,
         url: logo.url,
         locked: false,
         visible: true
