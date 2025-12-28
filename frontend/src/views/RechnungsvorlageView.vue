@@ -322,6 +322,17 @@ onMounted(async () => {
   loading.value = true
   try {
     await templateStore.fetchTemplates()
+    
+    // Automatisch Standard-Vorlage laden und im Editor öffnen
+    const defaultTemplate = templateStore.templates.find(t => t.is_default)
+    if (defaultTemplate) {
+      console.log('Loading default template:', defaultTemplate.name)
+      editTemplate(defaultTemplate)
+    } else if (templateStore.templates.length > 0) {
+      // Falls kein Standard: Erstes Template laden
+      console.log('Loading first template:', templateStore.templates[0].name)
+      editTemplate(templateStore.templates[0])
+    }
   } catch (error) {
     console.error('Failed to load templates:', error)
     showToastMessage('Fehler beim Laden der Vorlagen', 'error')
@@ -410,6 +421,39 @@ function editTemplate(template: InvoiceTemplate) {
         size: 10,
         snap: true
       }
+    }
+    
+    // Convert logos array (new format) to elements
+    if (templateConfig.logos && Array.isArray(templateConfig.logos)) {
+      migratedConfig.elements = templateConfig.logos.map((logo: any) => ({
+        id: logo.id || `logo-${Date.now()}`,
+        type: 'logo' as const,
+        x: logo.x,
+        y: logo.y,
+        width: logo.width,
+        height: logo.height,
+        zIndex: 1,
+        logoId: logo.id || `logo-${Date.now()}`,
+        url: logo.url,
+        locked: false,
+        visible: true
+      }))
+    }
+    // Convert old single logo format (legacy support)
+    else if (templateConfig.logo) {
+      migratedConfig.elements = [{
+        id: 'logo-main',
+        type: 'logo' as const,
+        x: templateConfig.logo.x,
+        y: templateConfig.logo.y,
+        width: templateConfig.logo.width,
+        height: templateConfig.logo.height,
+        zIndex: 1,
+        logoId: 'logo-main',
+        url: templateConfig.logo.url,
+        locked: false,
+        visible: true
+      }]
     }
     
     template.config = migratedConfig
