@@ -116,12 +116,6 @@ const router = createRouter({
       name: 'Rechnungsvorlage',
       component: () => import('../views/RechnungsvorlageView.vue'),
       meta: { requiresAuth: true }
-    },
-    {
-      path: '/visual-editor',
-      name: 'Visual Editor',
-      component: () => import('../views/VisualInvoiceEditor.vue'),
-      meta: { requiresAuth: true }
     }
   ]
 })

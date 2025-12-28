@@ -281,17 +281,6 @@
             </div>
             <span class="nav-text">Rechnungsvorlage</span>
           </router-link>
-
-          <!-- Visual Editor -->
-          <router-link to="/visual-editor" class="nav-item">
-            <div class="nav-icon">
-              <svg viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-                <path d="M3 9h18M9 21V9" stroke="currentColor" stroke-width="2"/>
-              </svg>
-            </div>
-            <span class="nav-text">Visual Editor</span>
-          </router-link>
         </div>
 
         <button @click="logout" class="logout-btn">
