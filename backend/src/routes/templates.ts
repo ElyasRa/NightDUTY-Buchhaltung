@@ -52,7 +52,29 @@ router.get('/', authenticateToken, async (req, res) => {
         { created_at: 'desc' }
       ]
     })
-    res.json(templates)
+    
+    // Legacy-Format konvertieren für alle Templates (non-destructive)
+    const convertedTemplates = templates.map(template => {
+      const config = template.config as any
+      if (config.logo && !config.logos) {
+        // Add new format while keeping old format for backward compatibility
+        config.logos = [{
+          id: 'logo-main',
+          x: config.logo.x,
+          y: config.logo.y,
+          width: config.logo.width,
+          height: config.logo.height,
+          url: config.logo.url,
+          draggable: true,
+          resizable: true
+        }]
+        // Keep old format for backward compatibility
+        template.config = config
+      }
+      return template
+    })
+    
+    res.json(convertedTemplates)
   } catch (error) {
     console.error('Error fetching templates:', error)
     res.status(500).json({ error: 'Failed to fetch templates' })
@@ -75,6 +97,24 @@ router.get('/:id', authenticateToken, async (req, res) => {
     
     if (!template) {
       return res.status(404).json({ error: 'Template not found' })
+    }
+    
+    // Legacy-Format konvertieren (altes "logo" → neues "logos" Array)
+    const config = template.config as any
+    if (config.logo && !config.logos) {
+      // Add new format while keeping old format for backward compatibility
+      config.logos = [{
+        id: 'logo-main',
+        x: config.logo.x,
+        y: config.logo.y,
+        width: config.logo.width,
+        height: config.logo.height,
+        url: config.logo.url,
+        draggable: true,
+        resizable: true
+      }]
+      // Keep old format for backward compatibility
+      template.config = config
     }
     
     res.json(template)
