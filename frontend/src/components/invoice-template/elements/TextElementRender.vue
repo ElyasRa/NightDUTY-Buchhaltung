@@ -25,8 +25,8 @@ const textStyle = computed(() => ({
   fontWeight: props.element.bold ? 'bold' : 'normal',
   fontStyle: props.element.italic ? 'italic' : 'normal',
   textAlign: props.element.align || 'left',
-  whiteSpace: 'pre-wrap',
-  wordWrap: 'break-word'
+  whiteSpace: 'pre-wrap' as const,
+  wordBreak: 'break-word' as const
 }))
 </script>
 

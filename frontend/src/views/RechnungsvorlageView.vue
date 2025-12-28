@@ -104,6 +104,7 @@
             <div class="sidebar-section">
               <h3>Vorlagenname</h3>
               <input 
+                v-if="editorStore.currentTemplate"
                 v-model="editorStore.currentTemplate.name" 
                 type="text" 
                 placeholder="z.B. Meine Vorlage"
@@ -111,7 +112,7 @@
               />
             </div>
 
-            <div class="sidebar-section">
+            <div v-if="editorStore.currentTemplate" class="sidebar-section">
               <h3>Farben</h3>
               <div class="color-input">
                 <label>Primärfarbe</label>
@@ -178,9 +179,9 @@
           </div>
 
           <!-- Main Canvas Area -->
-          <div class="editor-main">
+          <div v-if="editorStore.currentTemplate" class="editor-main">
             <TemplateCanvas
-              :elements="editorStore.currentTemplate.config.elements"
+              :elements="editorStore.currentTemplate.config.elements || []"
               :selectedElement="editorStore.selectedElement"
               :zoom="editorStore.zoom"
               :showGrid="editorStore.showGrid"
@@ -211,7 +212,7 @@
               </button>
             </div>
 
-            <div class="sidebar-content">
+            <div v-if="editorStore.currentTemplate" class="sidebar-content">
               <!-- Logos Tab -->
               <div v-show="activeTab === 'logos'" class="tab-content">
                 <LogoLibrary @logoAdded="onLogoAdded" />
@@ -328,7 +329,7 @@ onMounted(async () => {
     if (defaultTemplate) {
       console.log('Loading default template:', defaultTemplate.name)
       editTemplate(defaultTemplate)
-    } else if (templateStore.templates.length > 0) {
+    } else if (templateStore.templates.length > 0 && templateStore.templates[0]) {
       // Falls kein Standard: Erstes Template laden
       console.log('Loading first template:', templateStore.templates[0].name)
       editTemplate(templateStore.templates[0])
@@ -353,7 +354,7 @@ function getPreviewStyle(template: InvoiceTemplate) {
 }
 
 function createNewTemplate() {
-  const newTemplate: any = {
+  const newTemplate = {
     name: 'Neue Vorlage',
     is_default: false,
     config: {
@@ -385,7 +386,7 @@ function createNewTemplate() {
     }
   }
   
-  editorStore.setCurrentTemplate(newTemplate as InvoiceTemplate)
+  editorStore.setCurrentTemplate(newTemplate as any)
   showEditor.value = true
 }
 

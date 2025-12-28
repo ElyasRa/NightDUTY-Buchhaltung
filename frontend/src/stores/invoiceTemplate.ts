@@ -471,7 +471,7 @@ export const useInvoiceTemplateStore = defineStore('invoiceTemplate', {
         this.currentTemplate.config.elements[index] = {
           ...this.currentTemplate.config.elements[index],
           ...updates
-        }
+        } as TemplateElement
         
         if (this.selectedElement?.id === elementId) {
           this.selectedElement = this.currentTemplate.config.elements[index]

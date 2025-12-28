@@ -1,6 +1,6 @@
 <template>
   <div
-    :ref="elementRef"
+    ref="elementRef"
     class="draggable-element"
     :class="{ 
       'selected': isSelected,
@@ -65,7 +65,7 @@ const resizeHandles = ['nw', 'ne', 'sw', 'se']
 const elementStyle = computed(() => {
   const scale = props.zoom / 100
   return {
-    position: 'absolute',
+    position: 'absolute' as const,
     left: `${props.element.x * scale}px`,
     top: `${props.element.y * scale}px`,
     width: `${props.element.width * scale}px`,
