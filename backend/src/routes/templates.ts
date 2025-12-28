@@ -334,4 +334,50 @@ router.delete('/logos/:id', authenticateToken, async (req, res) => {
   }
 })
 
+// POST /api/templates/company-data - Save company data to template
+router.post('/company-data', authenticateToken, async (req, res) => {
+  try {
+    const { templateId, companyData } = req.body
+    
+    if (!templateId) {
+      return res.status(400).json({ error: 'Template ID is required' })
+    }
+    
+    const templateIdInt = parseInt(templateId)
+    if (isNaN(templateIdInt)) {
+      return res.status(400).json({ error: 'Invalid template ID' })
+    }
+
+    const template = await prisma.invoiceTemplate.findUnique({
+      where: { id: templateIdInt }
+    })
+    
+    if (!template) {
+      return res.status(404).json({ error: 'Template not found' })
+    }
+
+    const config = template.config as any
+    
+    const updatedTemplate = await prisma.invoiceTemplate.update({
+      where: { id: templateIdInt },
+      data: {
+        config: {
+          ...config,
+          companyData: {
+            ...companyData,
+            // Position bleibt editierbar
+            x: config.companyData?.x || 340,
+            y: config.companyData?.y || 165
+          }
+        }
+      }
+    })
+
+    res.json(updatedTemplate)
+  } catch (error) {
+    console.error('Error saving company data:', error)
+    res.status(500).json({ error: 'Failed to save company data' })
+  }
+})
+
 export default router

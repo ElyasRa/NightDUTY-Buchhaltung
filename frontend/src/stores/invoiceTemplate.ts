@@ -143,6 +143,7 @@ export interface TemplateConfig {
     size: number
     snap: boolean
   }
+  canvasData?: any // For Fabric.js canvas JSON data
 }
 
 export interface InvoiceTemplate {

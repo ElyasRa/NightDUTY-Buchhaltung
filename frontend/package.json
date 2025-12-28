@@ -14,12 +14,15 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@tabler/icons-vue": "^3.36.0",
     "@vueuse/core": "^11.0.0",
     "axios": "^1.13.2",
+    "fabric": "^6.9.1",
     "pinia": "^3.0.3",
     "uuid": "^9.0.0",
     "vue": "^3.5.22",
-    "vue-router": "^4.6.3"
+    "vue-router": "^4.6.3",
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.2",
