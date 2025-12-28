@@ -48,6 +48,7 @@
             :canRedo="canRedo"
             :hasSelection="hasSelection"
             @addElement="addElement"
+            @loadNightDutyTemplate="loadNightDutyTemplate"
             @undo="undo"
             @redo="redo"
             @deleteSelected="deleteSelected"
@@ -242,6 +243,9 @@ function addElement(type: string) {
     case 'text':
       editorCanvas.value.addText('Neuer Text')
       break
+    case 'heading':
+      editorCanvas.value.addHeading('Überschrift')
+      break
     case 'rectangle':
       editorCanvas.value.addRectangle()
       break
@@ -250,6 +254,39 @@ function addElement(type: string) {
       break
     case 'line':
       editorCanvas.value.addLine()
+      break
+    case 'colorStripe':
+      editorCanvas.value.addColorStripe()
+      break
+    case 'watermark':
+      editorCanvas.value.addWatermark()
+      break
+    case 'companyData':
+      editorCanvas.value.addCompanyData()
+      break
+    case 'bankDetails':
+      editorCanvas.value.addBankDetails()
+      break
+    case 'customerAddress':
+      editorCanvas.value.addCustomerAddress()
+      break
+    case 'invoiceInfo':
+      editorCanvas.value.addInvoiceInfo()
+      break
+    case 'table':
+      editorCanvas.value.addTable()
+      break
+    case 'totals':
+      editorCanvas.value.addTotals()
+      break
+    case 'footer':
+      editorCanvas.value.addFooter()
+      break
+    case 'box':
+      editorCanvas.value.addBox()
+      break
+    case 'shape':
+      editorCanvas.value.addShape('circle')
       break
     case 'image':
       // Open file picker
@@ -276,8 +313,15 @@ function addElement(type: string) {
 }
 
 function addElementFromLibrary(type: string) {
-  // TODO: Add specific invoice elements
   addElement(type)
+}
+
+function loadNightDutyTemplate() {
+  if (!editorCanvas.value) return
+  
+  editorCanvas.value.loadNightDutyTemplate()
+  saveToHistory()
+  showToastMessage('NIGHTDUTY Vorlage wurde geladen', 'success')
 }
 
 function updateProperty(property: string, value: any) {

@@ -1,6 +1,15 @@
 <template>
   <div class="editor-toolbar">
     <div class="toolbar-section">
+      <button @click="emit('loadNightDutyTemplate')" class="tool-btn special" title="NIGHTDUTY Vorlage laden">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        NIGHTDUTY Vorlage
+      </button>
+    </div>
+
+    <div class="toolbar-section">
       <button @click="emit('addElement', 'text')" class="tool-btn" title="Text hinzufügen">
         <svg viewBox="0 0 24 24" fill="none">
           <path d="M4 7V4h16v3M9 20h6M12 4v16" stroke="currentColor" stroke-width="2"/>
@@ -92,6 +101,7 @@ withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   addElement: [type: string]
+  loadNightDutyTemplate: []
   undo: []
   redo: []
   deleteSelected: []
@@ -135,6 +145,13 @@ const emit = defineEmits<{
   cursor: pointer;
   transition: all 0.2s;
   min-width: 60px;
+}
+
+.tool-btn.special {
+  background: linear-gradient(135deg, #ff006e 0%, #8338ec 100%);
+  border-color: transparent;
+  font-weight: 600;
+  min-width: 100px;
 }
 
 .tool-btn:hover:not(:disabled) {
