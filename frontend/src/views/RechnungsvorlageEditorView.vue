@@ -19,6 +19,19 @@
         </div>
 
         <div class="header-right">
+          <button @click="loadDefaultTemplate" class="btn-default" title="NIGHTDUTY Standardvorlage laden">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Standard laden
+          </button>
+          <button @click="togglePreview" class="btn-preview" :class="{ active: previewMode }">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2"/>
+              <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            {{ previewMode ? 'Bearbeiten' : 'Vorschau' }}
+          </button>
           <button @click="saveTemplate" class="btn-save" :disabled="saving">
             <svg viewBox="0 0 24 24" fill="none">
               <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2"/>
@@ -148,6 +161,7 @@ const saving = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
 const toastType = ref('success')
+const previewMode = ref(false)
 
 // History for undo/redo
 const history = ref<any[]>([])
@@ -451,6 +465,42 @@ function goBack() {
   router.push('/rechnungsvorlage')
 }
 
+function loadDefaultTemplate() {
+  if (editorCanvas.value) {
+    editorCanvas.value.loadNightDutyTemplate()
+    templateName.value = 'NIGHTDUTY Standardvorlage'
+    saveToHistory()
+    showToastMessage('Standardvorlage geladen', 'success')
+  }
+}
+
+function togglePreview() {
+  previewMode.value = !previewMode.value
+  
+  if (!canvas) return
+  
+  // In preview mode, disable selection and editing
+  const objects = canvas.getObjects()
+  objects.forEach(obj => {
+    // Skip grid lines
+    // @ts-ignore - data property exists but not typed
+    if (obj.data && obj.data.isGrid) return
+    
+    obj.selectable = !previewMode.value
+    obj.evented = !previewMode.value
+    obj.hasControls = !previewMode.value
+    obj.hasBorders = !previewMode.value
+  })
+  
+  canvas.discardActiveObject()
+  canvas.renderAll()
+  
+  showToastMessage(
+    previewMode.value ? 'Vorschaumodus aktiviert' : 'Bearbeitungsmodus aktiviert',
+    'info'
+  )
+}
+
 // Keyboard shortcuts
 function handleKeyDown(event: KeyboardEvent) {
   // Ctrl/Cmd + S: Save
@@ -587,6 +637,64 @@ function showToastMessage(message: string, type: string = 'success') {
 }
 
 .btn-save svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-default {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: rgba(30, 58, 138, 0.2);
+  border: 1px solid rgba(30, 58, 138, 0.4);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-default:hover {
+  background: rgba(30, 58, 138, 0.3);
+  border-color: rgba(30, 58, 138, 0.6);
+  transform: translateY(-1px);
+}
+
+.btn-default svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-preview:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 0, 110, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-preview.active {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #10b981;
+}
+
+.btn-preview svg {
   width: 18px;
   height: 18px;
 }

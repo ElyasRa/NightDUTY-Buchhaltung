@@ -48,7 +48,33 @@ onMounted(() => {
     height: props.height,
     backgroundColor: props.backgroundColor,
     selection: true,
-    preserveObjectStacking: true
+    preserveObjectStacking: true,
+    // Enable controls for all objects
+    uniformScaling: false,
+    // Allow rotation
+    centeredRotation: true,
+    centeredScaling: false
+  })
+
+  // Configure default controls for all objects
+  canvas.on('object:added', (e) => {
+    if (e.target && !e.target.data?.isGrid) {
+      // Ensure object is movable and has resize handles
+      e.target.set({
+        lockMovementX: false,
+        lockMovementY: false,
+        lockScalingX: false,
+        lockScalingY: false,
+        lockRotation: false,
+        hasControls: true,
+        hasBorders: true,
+        borderColor: '#ff006e',
+        cornerColor: '#ff006e',
+        cornerSize: 10,
+        transparentCorners: false,
+        cornerStyle: 'circle'
+      })
+    }
   })
 
   // Add grid if enabled
@@ -210,6 +236,13 @@ function addRectangle(options = {}) {
     width: 100,
     height: 100,
     fill: '#1e3a8a',
+    hasControls: true,
+    hasBorders: true,
+    lockMovementX: false,
+    lockMovementY: false,
+    lockScalingX: false,
+    lockScalingY: false,
+    lockRotation: false,
     ...options
   })
   
@@ -227,6 +260,13 @@ function addCircle(options = {}) {
     top: 100,
     radius: 50,
     fill: '#1e3a8a',
+    hasControls: true,
+    hasBorders: true,
+    lockMovementX: false,
+    lockMovementY: false,
+    lockScalingX: false,
+    lockScalingY: false,
+    lockRotation: false,
     ...options
   })
   
@@ -245,6 +285,13 @@ function addText(text = 'Text', options = {}) {
     fontSize: 20,
     fill: '#000000',
     fontFamily: 'Arial',
+    hasControls: true,
+    hasBorders: true,
+    lockMovementX: false,
+    lockMovementY: false,
+    lockScalingX: false,
+    lockScalingY: false,
+    lockRotation: false,
     ...options
   })
   
@@ -260,6 +307,13 @@ function addLine(options = {}) {
   const line = new Line([50, 50, 200, 50], {
     stroke: '#000000',
     strokeWidth: 2,
+    hasControls: true,
+    hasBorders: true,
+    lockMovementX: false,
+    lockMovementY: false,
+    lockScalingX: false,
+    lockScalingY: false,
+    lockRotation: false,
     ...options
   })
   
@@ -278,6 +332,13 @@ function addImage(url: string, options = {}) {
       top: 100,
       scaleX: 0.5,
       scaleY: 0.5,
+      hasControls: true,
+      hasBorders: true,
+      lockMovementX: false,
+      lockMovementY: false,
+      lockScalingX: false,
+      lockScalingY: false,
+      lockRotation: false,
       ...options
     })
     
@@ -319,6 +380,198 @@ function clear() {
   canvas.renderAll()
 }
 
+function loadNightDutyTemplate() {
+  if (!canvas) return
+  
+  clear()
+  
+  // Add NIGHTDUTY header text
+  const headerText = new IText('NIGHTDUTY', {
+    left: 50,
+    top: 40,
+    fontSize: 32,
+    fontWeight: 'bold',
+    fill: '#1e3a8a',
+    fontFamily: 'Arial',
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(headerText)
+  
+  // Add company info placeholder
+  const companyInfo = new IText('Firma GmbH\nMusterstraße 123\n12345 Musterstadt', {
+    left: 50,
+    top: 100,
+    fontSize: 12,
+    fill: '#333333',
+    fontFamily: 'Arial',
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(companyInfo)
+  
+  // Add invoice title
+  const invoiceTitle = new IText('RECHNUNG', {
+    left: 50,
+    top: 250,
+    fontSize: 24,
+    fontWeight: 'bold',
+    fill: '#1e3a8a',
+    fontFamily: 'Arial',
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(invoiceTitle)
+  
+  // Add customer address section
+  const customerLabel = new IText('Rechnungsempfänger:', {
+    left: 50,
+    top: 300,
+    fontSize: 12,
+    fontWeight: 'bold',
+    fill: '#000000',
+    fontFamily: 'Arial',
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(customerLabel)
+  
+  const customerAddress = new IText('Kunde Name\nKundenstraße 456\n12345 Stadt', {
+    left: 50,
+    top: 320,
+    fontSize: 12,
+    fill: '#333333',
+    fontFamily: 'Arial',
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(customerAddress)
+  
+  // Add invoice info box
+  const infoBox = new Rect({
+    left: 450,
+    top: 250,
+    width: 300,
+    height: 120,
+    fill: '#f0f0f0',
+    stroke: '#1e3a8a',
+    strokeWidth: 2,
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(infoBox)
+  
+  const invoiceInfo = new IText('Rechnungsnummer: RE-2025-001\nDatum: 28.12.2025\nFälligkeit: 11.01.2026\n\nKundennummer: K-12345', {
+    left: 460,
+    top: 260,
+    fontSize: 12,
+    fill: '#000000',
+    fontFamily: 'Arial',
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(invoiceInfo)
+  
+  // Add table header
+  const tableHeader = new Rect({
+    left: 50,
+    top: 450,
+    width: 700,
+    height: 30,
+    fill: '#1e3a8a',
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(tableHeader)
+  
+  const tableHeaderText = new IText('Position                  Beschreibung                            Menge    Preis      Summe', {
+    left: 60,
+    top: 458,
+    fontSize: 11,
+    fontWeight: 'bold',
+    fill: '#ffffff',
+    fontFamily: 'Arial',
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(tableHeaderText)
+  
+  // Add sample line items
+  const lineItem1 = new IText('1    Nachtdienst 01.12.2025                               1      150,00 €    150,00 €', {
+    left: 60,
+    top: 495,
+    fontSize: 11,
+    fill: '#000000',
+    fontFamily: 'Arial',
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(lineItem1)
+  
+  // Add horizontal line separator
+  const separatorLine = new Line([50, 480, 750, 480], {
+    stroke: '#cccccc',
+    strokeWidth: 1,
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(separatorLine)
+  
+  // Add totals section
+  const totalsBox = new Rect({
+    left: 550,
+    top: 900,
+    width: 200,
+    height: 120,
+    fill: '#f9f9f9',
+    stroke: '#1e3a8a',
+    strokeWidth: 1,
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(totalsBox)
+  
+  const totalsText = new IText('Zwischensumme:  150,00 €\nMwSt. 19%:           28,50 €\n\nGesamtbetrag:     178,50 €', {
+    left: 560,
+    top: 910,
+    fontSize: 12,
+    fill: '#000000',
+    fontFamily: 'Arial',
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(totalsText)
+  
+  // Add footer
+  const footerText = new IText('Bankverbindung: IBAN DE00 0000 0000 0000 0000 00 | BIC: AAABBB11 | USt-ID: DE123456789\nVielen Dank für Ihr Vertrauen!', {
+    left: 50,
+    top: 1060,
+    fontSize: 10,
+    fill: '#666666',
+    fontFamily: 'Arial',
+    textAlign: 'center',
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(footerText)
+  
+  // Add decorative line at top
+  const topLine = new Rect({
+    left: 0,
+    top: 0,
+    width: props.width,
+    height: 5,
+    fill: '#ff006e',
+    selectable: true,
+    hasControls: true,
+    hasBorders: true
+  })
+  canvas.add(topLine)
+  canvas.sendObjectToBack(topLine)
+  
+  canvas.renderAll()
+}
+
 defineExpose({
   addRectangle,
   addCircle,
@@ -329,7 +582,8 @@ defineExpose({
   getCanvas,
   toJSON,
   loadFromJSON,
-  clear
+  clear,
+  loadNightDutyTemplate
 })
 </script>
 
