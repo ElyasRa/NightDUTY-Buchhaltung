@@ -287,6 +287,169 @@ function addImage(url: string, options = {}) {
   })
 }
 
+function addInvoiceElement(type: string) {
+  if (!canvas) return
+  
+  switch (type) {
+    case 'companyData':
+      addText('Firma GmbH\nMusterstraße 123\n12345 Musterstadt\nTel: +49 123 456789\nEmail: info@firma.de', {
+        left: 50,
+        top: 50,
+        fontSize: 12,
+        fontFamily: 'Arial'
+      })
+      break
+      
+    case 'customerAddress':
+      addRectangle({
+        left: 50,
+        top: 200,
+        width: 200,
+        height: 100,
+        fill: 'transparent',
+        stroke: '#cccccc',
+        strokeWidth: 1
+      })
+      addText('Kundenadresse', {
+        left: 60,
+        top: 210,
+        fontSize: 10,
+        fill: '#666666'
+      })
+      break
+      
+    case 'invoiceInfo':
+      addText('Rechnungsnummer: {RECHNUNGSNUMMER}\nDatum: {DATUM}\nFällig: {FAELLIGKEITSDATUM}', {
+        left: 400,
+        top: 50,
+        fontSize: 11,
+        fontFamily: 'Arial',
+        textAlign: 'right'
+      })
+      break
+      
+    case 'table':
+      // Add table header
+      addRectangle({
+        left: 50,
+        top: 350,
+        width: 500,
+        height: 30,
+        fill: '#1e3a8a'
+      })
+      addText('Pos.\tBeschreibung\tMenge\tPreis\tGesamt', {
+        left: 60,
+        top: 360,
+        fontSize: 11,
+        fill: '#ffffff',
+        fontFamily: 'Arial'
+      })
+      // Add table body placeholder
+      addRectangle({
+        left: 50,
+        top: 380,
+        width: 500,
+        height: 150,
+        fill: 'transparent',
+        stroke: '#cccccc',
+        strokeWidth: 1
+      })
+      break
+      
+    case 'totals':
+      addText('Zwischensumme:\nMwSt. (19%):\nGesamtsumme:', {
+        left: 350,
+        top: 550,
+        fontSize: 11,
+        fontFamily: 'Arial',
+        textAlign: 'right'
+      })
+      addText('{BETRAG_NETTO} €\n{MWST} €\n{BETRAG_BRUTTO} €', {
+        left: 500,
+        top: 550,
+        fontSize: 11,
+        fontFamily: 'Arial',
+        fontWeight: 'bold',
+        textAlign: 'right'
+      })
+      break
+      
+    case 'footer':
+      addLine({
+        x1: 50,
+        y1: 1050,
+        x2: 744,
+        y2: 1050,
+        stroke: '#cccccc',
+        strokeWidth: 1
+      })
+      addText('Firma GmbH | Bankverbindung: IBAN DE00 0000 0000 0000 0000 00 | BIC: GENODEF1', {
+        left: 50,
+        top: 1060,
+        fontSize: 8,
+        fill: '#666666',
+        fontFamily: 'Arial'
+      })
+      break
+      
+    case 'bankDetails':
+      addText('Bankverbindung:\nIBAN: DE00 0000 0000 0000 0000 00\nBIC: GENODEF1\nBank: Musterbank', {
+        left: 50,
+        top: 650,
+        fontSize: 10,
+        fontFamily: 'Arial'
+      })
+      break
+      
+    case 'colorStripe':
+      addRectangle({
+        left: 0,
+        top: 0,
+        width: 794,
+        height: 20,
+        fill: '#ff006e',
+        selectable: true
+      })
+      break
+      
+    case 'watermark':
+      addText('ENTWURF', {
+        left: 300,
+        top: 500,
+        fontSize: 80,
+        fill: 'rgba(0, 0, 0, 0.05)',
+        fontFamily: 'Arial',
+        fontWeight: 'bold',
+        angle: -45
+      })
+      break
+  }
+}
+
+function addColoredLine(orientation: 'horizontal' | 'vertical' = 'horizontal') {
+  if (!canvas) return
+  
+  if (orientation === 'horizontal') {
+    addLine({
+      x1: 50,
+      y1: 100,
+      x2: 744,
+      y2: 100,
+      stroke: '#ff006e',
+      strokeWidth: 3
+    })
+  } else {
+    addLine({
+      x1: 100,
+      y1: 50,
+      x2: 100,
+      y2: 1073,
+      stroke: '#ff006e',
+      strokeWidth: 3
+    })
+  }
+}
+
 function deleteSelected() {
   if (!canvas) return
   const activeObjects = canvas.getActiveObjects()
@@ -325,6 +488,8 @@ defineExpose({
   addText,
   addLine,
   addImage,
+  addInvoiceElement,
+  addColoredLine,
   deleteSelected,
   getCanvas,
   toJSON,

@@ -1,134 +1,130 @@
 <template>
   <div class="element-library">
     <h3>📚 Element-Bibliothek</h3>
-    <p class="subtitle">Ziehen Sie Elemente auf die Leinwand</p>
+    <p class="subtitle">Klicken Sie auf ein Element, um es hinzuzufügen</p>
 
     <div class="library-section">
-      <h4>Text & Inhalt</h4>
-      <draggable 
-        v-model="textElements" 
-        :group="{ name: 'elements', pull: 'clone', put: false }"
-        :clone="cloneElement"
-        class="element-list"
-        @start="onDragStart"
-        @end="onDragEnd"
-      >
-        <template #item="{ element }">
-          <div class="element-item" :data-type="element.type">
-            <span class="element-icon">{{ element.icon }}</span>
-            <span class="element-label">{{ element.label }}</span>
-          </div>
-        </template>
-      </draggable>
+      <h4>Basis-Elemente</h4>
+      <div class="element-list">
+        <div class="element-item" @click="addElement('text')">
+          <span class="element-icon">📝</span>
+          <span class="element-label">Textfeld</span>
+        </div>
+        <div class="element-item" @click="addElement('rectangle')">
+          <span class="element-icon">◻️</span>
+          <span class="element-label">Rechteck</span>
+        </div>
+        <div class="element-item" @click="addElement('circle')">
+          <span class="element-icon">⭕</span>
+          <span class="element-label">Kreis</span>
+        </div>
+        <div class="element-item" @click="addElement('line')">
+          <span class="element-icon">—</span>
+          <span class="element-label">Linie</span>
+        </div>
+        <div class="element-item" @click="addElement('image')">
+          <span class="element-icon">🖼️</span>
+          <span class="element-label">Bild hochladen</span>
+        </div>
+      </div>
     </div>
 
     <div class="library-section">
       <h4>Firmendaten</h4>
-      <draggable 
-        v-model="companyElements" 
-        :group="{ name: 'elements', pull: 'clone', put: false }"
-        :clone="cloneElement"
-        class="element-list"
-        @start="onDragStart"
-        @end="onDragEnd"
-      >
-        <template #item="{ element }">
-          <div class="element-item" :data-type="element.type">
-            <span class="element-icon">{{ element.icon }}</span>
-            <span class="element-label">{{ element.label }}</span>
-          </div>
-        </template>
-      </draggable>
+      <div class="element-list">
+        <div class="element-item" @click="addInvoiceElement('companyData')">
+          <span class="element-icon">🏢</span>
+          <span class="element-label">Firmendaten</span>
+        </div>
+        <div class="element-item" @click="addInvoiceElement('bankDetails')">
+          <span class="element-icon">💳</span>
+          <span class="element-label">Bankverbindung</span>
+        </div>
+      </div>
     </div>
 
     <div class="library-section">
       <h4>Rechnungsdaten</h4>
-      <draggable 
-        v-model="invoiceElements" 
-        :group="{ name: 'elements', pull: 'clone', put: false }"
-        :clone="cloneElement"
-        class="element-list"
-        @start="onDragStart"
-        @end="onDragEnd"
-      >
-        <template #item="{ element }">
-          <div class="element-item" :data-type="element.type">
-            <span class="element-icon">{{ element.icon }}</span>
-            <span class="element-label">{{ element.label }}</span>
-          </div>
-        </template>
-      </draggable>
+      <div class="element-list">
+        <div class="element-item" @click="addInvoiceElement('customerAddress')">
+          <span class="element-icon">👤</span>
+          <span class="element-label">Kundenadresse</span>
+        </div>
+        <div class="element-item" @click="addInvoiceElement('invoiceInfo')">
+          <span class="element-icon">ℹ️</span>
+          <span class="element-label">Rechnungsinfo</span>
+        </div>
+        <div class="element-item" @click="addInvoiceElement('table')">
+          <span class="element-icon">📋</span>
+          <span class="element-label">Rechnungstabelle</span>
+        </div>
+        <div class="element-item" @click="addInvoiceElement('totals')">
+          <span class="element-icon">💰</span>
+          <span class="element-label">Summen</span>
+        </div>
+        <div class="element-item" @click="addInvoiceElement('footer')">
+          <span class="element-icon">📄</span>
+          <span class="element-label">Fußzeile</span>
+        </div>
+      </div>
     </div>
 
     <div class="library-section">
-      <h4>Visuelle Elemente</h4>
-      <draggable 
-        v-model="visualElements" 
-        :group="{ name: 'elements', pull: 'clone', put: false }"
-        :clone="cloneElement"
-        class="element-list"
-        @start="onDragStart"
-        @end="onDragEnd"
-      >
-        <template #item="{ element }">
-          <div class="element-item" :data-type="element.type">
-            <span class="element-icon">{{ element.icon }}</span>
-            <span class="element-label">{{ element.label }}</span>
-          </div>
-        </template>
-      </draggable>
+      <h4>Design-Elemente</h4>
+      <div class="element-list">
+        <div class="element-item" @click="addInvoiceElement('colorStripe')">
+          <span class="element-icon">🎨</span>
+          <span class="element-label">Farbstreifen</span>
+        </div>
+        <div class="element-item" @click="addInvoiceElement('watermark')">
+          <span class="element-icon">💧</span>
+          <span class="element-label">Wasserzeichen</span>
+        </div>
+        <div class="element-item" @click="addColoredLine('horizontal')">
+          <span class="element-icon">—</span>
+          <span class="element-label">H-Linie (farbig)</span>
+        </div>
+        <div class="element-item" @click="addColoredLine('vertical')">
+          <span class="element-icon">|</span>
+          <span class="element-label">V-Linie (farbig)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="library-section">
+      <h4>Schnellstart</h4>
+      <div class="element-list">
+        <button class="template-btn" @click="createNightDutyTemplate">
+          <span class="element-icon">⚡</span>
+          <span>NIGHTDUTY Vorlage erstellen</span>
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import draggable from 'vuedraggable'
-
 const emit = defineEmits<{
-  elementDrop: [type: string]
+  addElement: [type: string]
+  addInvoiceElement: [type: string]
+  addColoredLine: [orientation: 'horizontal' | 'vertical']
+  createTemplate: [templateName: string]
 }>()
 
-const textElements = ref([
-  { type: 'text', icon: '📝', label: 'Textfeld' },
-  { type: 'heading', icon: '📰', label: 'Überschrift' }
-])
-
-const companyElements = ref([
-  { type: 'companyData', icon: '🏢', label: 'Firmendaten' },
-  { type: 'logo', icon: '🖼️', label: 'Logo' },
-  { type: 'bankDetails', icon: '💳', label: 'Bankverbindung' }
-])
-
-const invoiceElements = ref([
-  { type: 'customerAddress', icon: '👤', label: 'Kundenadresse' },
-  { type: 'invoiceInfo', icon: 'ℹ️', label: 'Rechnungsinfo' },
-  { type: 'table', icon: '📋', label: 'Tabelle' },
-  { type: 'totals', icon: '💰', label: 'Summen' },
-  { type: 'footer', icon: '📄', label: 'Fußzeile' }
-])
-
-const visualElements = ref([
-  { type: 'colorStripe', icon: '🎨', label: 'Farbstreifen' },
-  { type: 'watermark', icon: '💧', label: 'Wasserzeichen' },
-  { type: 'box', icon: '◻️', label: 'Box' },
-  { type: 'line', icon: '—', label: 'Linie' },
-  { type: 'shape', icon: '⭕', label: 'Form' }
-])
-
-function cloneElement(element: any) {
-  return { ...element }
+function addElement(type: string) {
+  emit('addElement', type)
 }
 
-function onDragStart(event: any) {
-  console.log('Drag started:', event)
+function addInvoiceElement(type: string) {
+  emit('addInvoiceElement', type)
 }
 
-function onDragEnd(event: any) {
-  console.log('Drag ended:', event)
-  if (event.item && event.item.dataset.type) {
-    emit('elementDrop', event.item.dataset.type)
-  }
+function addColoredLine(orientation: 'horizontal' | 'vertical') {
+  emit('addColoredLine', orientation)
+}
+
+function createNightDutyTemplate() {
+  emit('createTemplate', 'nightduty')
 }
 </script>
 
@@ -180,7 +176,7 @@ function onDragEnd(event: any) {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  cursor: grab;
+  cursor: pointer;
   transition: all 0.2s;
 }
 
@@ -191,7 +187,8 @@ function onDragEnd(event: any) {
 }
 
 .element-item:active {
-  cursor: grabbing;
+  background: rgba(255, 0, 110, 0.2);
+  transform: translateX(2px);
 }
 
 .element-icon {
@@ -202,6 +199,33 @@ function onDragEnd(event: any) {
   font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
+}
+
+.template-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #ff006e 0%, #8338ec 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(255, 0, 110, 0.3);
+}
+
+.template-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 0, 110, 0.4);
+}
+
+.template-btn .element-icon {
+  font-size: 1.5rem;
 }
 
 /* Scrollbar */

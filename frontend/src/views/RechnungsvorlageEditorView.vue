@@ -19,6 +19,19 @@
         </div>
 
         <div class="header-right">
+          <button @click="togglePreviewMode" class="btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            {{ previewMode ? 'Bearbeitungsmodus' : 'Vorschau' }}
+          </button>
+          <button @click="exportPDF" class="btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m14-7l-5-5m0 0L7 8m5-5v12" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            PDF Export
+          </button>
           <button @click="saveTemplate" class="btn-save" :disabled="saving">
             <svg viewBox="0 0 24 24" fill="none">
               <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2"/>
@@ -87,6 +100,12 @@
               📚 Elemente
             </button>
             <button 
+              :class="['tab', { active: activeTab === 'company' }]"
+              @click="activeTab = 'company'"
+            >
+              🏢 Firmendaten
+            </button>
+            <button 
               :class="['tab', { active: activeTab === 'layers' }]"
               @click="activeTab = 'layers'"
             >
@@ -97,7 +116,16 @@
           <div class="panel-content">
             <ElementLibrary 
               v-show="activeTab === 'elements'"
-              @elementDrop="addElementFromLibrary"
+              @addElement="addElement"
+              @addInvoiceElement="addInvoiceElement"
+              @addColoredLine="addColoredLine"
+              @createTemplate="createTemplate"
+            />
+            <CompanyDataEditor 
+              v-show="activeTab === 'company'"
+              :companyData="companyData"
+              :bankDetails="bankDetails"
+              @update="updateCompanyData"
             />
             <LayersPanel 
               v-show="activeTab === 'layers'"
@@ -129,6 +157,7 @@ import EditorToolbar from '../components/invoice-editor/EditorToolbar.vue'
 import ElementLibrary from '../components/invoice-editor/ElementLibrary.vue'
 import PropertiesPanel from '../components/invoice-editor/PropertiesPanel.vue'
 import LayersPanel from '../components/invoice-editor/LayersPanel.vue'
+import CompanyDataEditor from '../components/invoice-editor/CompanyDataEditor.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -148,6 +177,25 @@ const saving = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
 const toastType = ref('success')
+const previewMode = ref(false)
+
+// Company data
+const companyData = ref({
+  name: 'NIGHTDUTY GmbH',
+  address: 'Musterstraße 123',
+  city: '12345 Musterstadt',
+  phone: '+49 123 456789',
+  email: 'info@nightduty.de',
+  website: 'www.nightduty.de',
+  ustId: 'DE123456789',
+  taxNumber: '123/456/78901'
+})
+
+const bankDetails = ref({
+  iban: 'DE00 0000 0000 0000 0000 00',
+  bic: 'GENODEF1',
+  bank: 'Musterbank AG'
+})
 
 // History for undo/redo
 const history = ref<any[]>([])
@@ -275,8 +323,58 @@ function addElement(type: string) {
   saveToHistory()
 }
 
+function addInvoiceElement(type: string) {
+  if (!editorCanvas.value) return
+  editorCanvas.value.addInvoiceElement(type)
+  saveToHistory()
+}
+
+function addColoredLine(orientation: 'horizontal' | 'vertical') {
+  if (!editorCanvas.value) return
+  editorCanvas.value.addColoredLine(orientation)
+  saveToHistory()
+}
+
+function createTemplate(templateName: string) {
+  if (!editorCanvas.value || !canvas) return
+  
+  if (templateName === 'nightduty') {
+    // Clear canvas first
+    editorCanvas.value.clear()
+    
+    // Add color stripe at top
+    editorCanvas.value.addInvoiceElement('colorStripe')
+    
+    // Add company data
+    editorCanvas.value.addInvoiceElement('companyData')
+    
+    // Add invoice info
+    editorCanvas.value.addInvoiceElement('invoiceInfo')
+    
+    // Add customer address
+    editorCanvas.value.addInvoiceElement('customerAddress')
+    
+    // Add table
+    editorCanvas.value.addInvoiceElement('table')
+    
+    // Add totals
+    editorCanvas.value.addInvoiceElement('totals')
+    
+    // Add bank details
+    editorCanvas.value.addInvoiceElement('bankDetails')
+    
+    // Add footer
+    editorCanvas.value.addInvoiceElement('footer')
+    
+    // Add watermark
+    editorCanvas.value.addInvoiceElement('watermark')
+    
+    saveToHistory()
+    showToastMessage('NIGHTDUTY Vorlage erstellt! Passen Sie die Elemente nach Bedarf an.', 'success')
+  }
+}
+
 function addElementFromLibrary(type: string) {
-  // TODO: Add specific invoice elements
   addElement(type)
 }
 
@@ -421,6 +519,8 @@ async function saveTemplate() {
       is_default: false,
       config: {
         canvasData,
+        companyData: companyData.value,
+        bankDetails: bankDetails.value,
         colors: {
           primary: '#1e3a8a',
           secondary: '#6b7280',
@@ -449,6 +549,42 @@ async function saveTemplate() {
 
 function goBack() {
   router.push('/rechnungsvorlage')
+}
+
+function togglePreviewMode() {
+  previewMode.value = !previewMode.value
+  if (previewMode.value) {
+    showToastMessage('Vorschau-Modus aktiviert. Platzhalter werden mit Beispieldaten gefüllt.', 'info')
+    // In preview mode, you would replace placeholders with test data
+    // For Fabric.js canvas, this is more for visual indication
+  } else {
+    showToastMessage('Bearbeitungsmodus aktiviert', 'info')
+  }
+}
+
+function exportPDF() {
+  if (!canvas) return
+  
+  // Get canvas as image
+  const dataURL = canvas.toDataURL({
+    format: 'png',
+    quality: 1,
+    multiplier: 2 // Higher resolution
+  })
+  
+  // For now, open in new tab - in production, you'd use a PDF library
+  const link = document.createElement('a')
+  link.download = `${templateName.value || 'vorlage'}.png`
+  link.href = dataURL
+  link.click()
+  
+  showToastMessage('Vorlage als Bild exportiert', 'success')
+}
+
+function updateCompanyData(data: any) {
+  companyData.value = data.companyData
+  bankDetails.value = data.bankDetails
+  showToastMessage('Firmendaten aktualisiert', 'success')
 }
 
 // Keyboard shortcuts
@@ -541,6 +677,31 @@ function showToastMessage(message: string, type: string = 'success') {
 }
 
 .btn-back svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 0, 110, 0.3);
+}
+
+.btn-secondary svg {
   width: 18px;
   height: 18px;
 }
