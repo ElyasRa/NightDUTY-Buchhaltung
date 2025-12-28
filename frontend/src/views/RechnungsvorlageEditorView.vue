@@ -19,6 +19,19 @@
         </div>
 
         <div class="header-right">
+          <button @click="showPreview" class="btn-preview">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2"/>
+              <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Vorschau
+          </button>
+          <button @click="showCompanyEditor" class="btn-company">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M3 21h18M5 21V7l8-4v18M19 21V10l-6-3M9 9v.01M9 12v.01M9 15v.01M9 18v.01" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Firmendaten
+          </button>
           <button @click="saveTemplate" class="btn-save" :disabled="saving">
             <svg viewBox="0 0 24 24" fill="none">
               <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2"/>
@@ -115,6 +128,99 @@
       <div v-if="showToast" :class="['toast', toastType]">
         {{ toastMessage }}
       </div>
+
+      <!-- Preview Modal -->
+      <div v-if="previewModalVisible" class="modal-overlay" @click="closePreview">
+        <div class="modal-content preview-modal" @click.stop>
+          <div class="modal-header">
+            <h2>📄 Rechnungsvorschau</h2>
+            <button @click="closePreview" class="modal-close">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <img v-if="previewImageUrl" :src="previewImageUrl" class="preview-image" alt="Vorschau" />
+          </div>
+          <div class="modal-footer">
+            <button @click="exportPDF" class="btn-export">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Als PDF exportieren
+            </button>
+            <button @click="closePreview" class="btn-secondary">Schließen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Company Data Editor Modal -->
+      <div v-if="companyEditorVisible" class="modal-overlay" @click="closeCompanyEditor">
+        <div class="modal-content company-editor-modal" @click.stop>
+          <div class="modal-header">
+            <h2>🏢 Firmendaten bearbeiten</h2>
+            <button @click="closeCompanyEditor" class="modal-close">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Firmenname:</label>
+                <input v-model="companyData.name" type="text" />
+              </div>
+              <div class="form-group">
+                <label>Adresse:</label>
+                <input v-model="companyData.address" type="text" />
+              </div>
+              <div class="form-group">
+                <label>PLZ/Ort:</label>
+                <input v-model="companyData.city" type="text" />
+              </div>
+              <div class="form-group">
+                <label>UST-ID:</label>
+                <input v-model="companyData.ustId" type="text" />
+              </div>
+              <div class="form-group">
+                <label>Steuernummer:</label>
+                <input v-model="companyData.taxNumber" type="text" />
+              </div>
+              <div class="form-group">
+                <label>IBAN:</label>
+                <input v-model="companyData.iban" type="text" />
+              </div>
+              <div class="form-group">
+                <label>BIC:</label>
+                <input v-model="companyData.bic" type="text" />
+              </div>
+              <div class="form-group">
+                <label>Bank:</label>
+                <input v-model="companyData.bank" type="text" />
+              </div>
+              <div class="form-group">
+                <label>Registergericht:</label>
+                <input v-model="companyData.registerCourt" type="text" />
+              </div>
+              <div class="form-group">
+                <label>Geschäftsführer:</label>
+                <input v-model="companyData.ceo" type="text" />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button @click="saveCompanyData" class="btn-save">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Speichern
+            </button>
+            <button @click="closeCompanyEditor" class="btn-secondary">Abbrechen</button>
+          </div>
+        </div>
+      </div>
     </div>
   </MainLayout>
 </template>
@@ -149,6 +255,25 @@ const saving = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
 const toastType = ref('success')
+
+// Preview modal
+const previewModalVisible = ref(false)
+const previewImageUrl = ref('')
+
+// Company data editor
+const companyEditorVisible = ref(false)
+const companyData = ref({
+  name: 'NIGHTDUTY GmbH',
+  address: 'Westendohrf 11',
+  city: '45143 Essen',
+  ustId: 'DE123456789',
+  taxNumber: '123/4567/8910',
+  iban: 'DE72 1001 9000 1000 0097 62',
+  bic: 'ADYBDEB2',
+  bank: 'Adyen N.V.',
+  registerCourt: 'Essen HRB 28180',
+  ceo: 'Roland Müller-Roth, Karsten Roth'
+})
 
 // History for undo/redo
 const history = ref<any[]>([])
@@ -190,6 +315,16 @@ onMounted(async () => {
   } else {
     // Initialize new template
     saveToHistory()
+  }
+
+  // Load company data from local storage
+  const savedCompanyData = localStorage.getItem('nightduty_company_data')
+  if (savedCompanyData) {
+    try {
+      companyData.value = JSON.parse(savedCompanyData)
+    } catch (e) {
+      console.error('Failed to parse company data:', e)
+    }
   }
 
   // Register keyboard shortcuts
@@ -539,6 +674,46 @@ function showToastMessage(message: string, type: string = 'success') {
     showToast.value = false
   }, 3000)
 }
+
+function showPreview() {
+  if (!canvas) return
+  
+  // Export canvas as PNG
+  const dataURL = canvas.toDataURL({ 
+    format: 'png', 
+    quality: 1,
+    multiplier: 1
+  })
+  previewImageUrl.value = dataURL
+  previewModalVisible.value = true
+}
+
+function closePreview() {
+  previewModalVisible.value = false
+}
+
+function exportPDF() {
+  showToastMessage('PDF Export wird vorbereitet...', 'info')
+  // TODO: Implement PDF export using jsPDF or similar
+  setTimeout(() => {
+    showToastMessage('PDF Export-Funktion wird noch implementiert', 'info')
+  }, 1000)
+}
+
+function showCompanyEditor() {
+  companyEditorVisible.value = true
+}
+
+function closeCompanyEditor() {
+  companyEditorVisible.value = false
+}
+
+function saveCompanyData() {
+  // Save company data to local storage or backend
+  localStorage.setItem('nightduty_company_data', JSON.stringify(companyData.value))
+  showToastMessage('Firmendaten wurden gespeichert', 'success')
+  closeCompanyEditor()
+}
 </script>
 
 <style scoped>
@@ -585,6 +760,34 @@ function showToastMessage(message: string, type: string = 'success') {
 }
 
 .btn-back svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-preview,
+.btn-company {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-preview:hover,
+.btn-company:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #ff006e;
+}
+
+.btn-preview svg,
+.btn-company svg {
   width: 18px;
   height: 18px;
 }
@@ -772,5 +975,193 @@ function showToastMessage(message: string, type: string = 'success') {
 .panel-content::-webkit-scrollbar-thumb {
   background: rgba(255, 0, 110, 0.3);
   border-radius: 10px;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background: #1e293b;
+  border: 1px solid rgba(255, 0, 110, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+}
+
+.preview-modal {
+  width: 900px;
+}
+
+.company-editor-modal {
+  width: 700px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.modal-close {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0.5rem;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+}
+
+.modal-close svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.modal-body {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.preview-image {
+  width: 100%;
+  height: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.form-group input {
+  padding: 0.625rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #ff006e;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-export:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.btn-export svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-secondary {
+  padding: 0.625rem 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #ff006e;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 </style>
