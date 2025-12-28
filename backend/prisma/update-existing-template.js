@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
 
@@ -15,7 +15,7 @@ async function updateExistingTemplate() {
       console.log('✅ Template found:', template.name)
       
       // Config erweitern für Multi-Logo Support
-      const config = template.config as any
+      const config = template.config
       const updatedConfig = {
         ...config,
         logos: [
@@ -32,7 +32,7 @@ async function updateExistingTemplate() {
         ]
       }
 
-      // Altes Logo-Format entfernen (optional)
+      // Altes Logo-Format entfernen (optional, für sauberere Daten)
       // delete updatedConfig.logo
 
       await prisma.invoiceTemplate.update({

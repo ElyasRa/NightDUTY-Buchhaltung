@@ -20,6 +20,9 @@ cd ~/nightduty
 
 # Code vom Repository pullen
 git pull origin main
+
+# Zum korrekten Branch wechseln (falls merge noch nicht erfolgt ist)
+# git checkout <branch-name>
 ```
 
 #### 2. Backend aktualisieren
