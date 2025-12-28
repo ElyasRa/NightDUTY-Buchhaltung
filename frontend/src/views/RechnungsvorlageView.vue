@@ -8,247 +8,31 @@
           <p>Erstellen und bearbeiten Sie Ihre Rechnungsvorlagen mit Drag & Drop</p>
         </div>
         <div class="header-actions">
-          <button v-if="!showEditor" @click="createNewTemplate" class="btn-primary">
+          <button @click="createNewTemplate" class="btn-primary">
             <svg viewBox="0 0 24 24" fill="none">
               <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
             Neue Vorlage
           </button>
-          <button v-if="showEditor" @click="saveCurrentTemplate" class="btn-primary" :disabled="saving">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2"/>
-              <polyline points="17 21 17 13 7 13 7 21" stroke="currentColor" stroke-width="2"/>
-            </svg>
-            {{ saving ? 'Speichert...' : 'Speichern' }}
-          </button>
-          <button v-if="showEditor" @click="closeEditor" class="btn-secondary">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/>
-            </svg>
-            Schließen
-          </button>
         </div>
       </div>
 
       <!-- Template List View -->
-      <div v-if="!showEditor">
+      <div>
         <div v-if="loading" class="loading-container">
           <div class="spinner"></div>
           <p>Lade Vorlagen...</p>
         </div>
 
         <div v-else class="templates-grid">
-          <div 
-            v-for="template in sortedTemplates" 
-            :key="template.id" 
-            class="template-card"
-            :class="{ 'is-default': template.is_default }"
-          >
-            <div class="template-preview">
-              <div class="preview-content" :style="getPreviewStyle(template)">
-                <div class="preview-header">
-                  <div class="preview-logo"></div>
-                  <div class="preview-info"></div>
-                </div>
-                <div class="preview-table"></div>
-                <div class="preview-footer"></div>
-              </div>
-            </div>
-
-            <div class="template-info">
-              <div class="template-header-card">
-                <h3>{{ template.name }}</h3>
-                <span v-if="template.is_default" class="default-badge">Standard</span>
-              </div>
-              
-              <div class="template-actions">
-                <button @click="editTemplate(template)" class="btn-icon" title="Bearbeiten">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2"/>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2"/>
-                  </svg>
-                </button>
-                
-                <button 
-                  v-if="!template.is_default" 
-                  @click="setAsDefault(template.id)" 
-                  class="btn-icon" 
-                  title="Als Standard setzen"
-                >
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2"/>
-                  </svg>
-                </button>
-                
-                <button 
-                  v-if="!template.is_default" 
-                  @click="confirmDelete(template)" 
-                  class="btn-icon btn-danger" 
-                  title="Löschen"
-                >
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Editor View (3-column layout) -->
-      <div v-else class="editor-view">
-        <div class="editor-layout">
-          <!-- Left Sidebar -->
-          <div class="sidebar sidebar-left">
-            <div class="sidebar-section">
-              <h3>Vorlagenname</h3>
-              <input 
-                v-if="editorStore.currentTemplate"
-                v-model="editorStore.currentTemplate.name" 
-                type="text" 
-                placeholder="z.B. Meine Vorlage"
-                class="form-input"
-              />
-            </div>
-
-            <div v-if="editorStore.currentTemplate" class="sidebar-section">
-              <h3>Farben</h3>
-              <div class="color-input">
-                <label>Primärfarbe</label>
-                <input 
-                  v-model="editorStore.currentTemplate.config.colors.primary" 
-                  type="color"
-                />
-              </div>
-              <div class="color-input">
-                <label>Sekundärfarbe</label>
-                <input 
-                  v-model="editorStore.currentTemplate.config.colors.secondary" 
-                  type="color"
-                />
-              </div>
-              <div class="color-input">
-                <label>Textfarbe</label>
-                <input 
-                  v-model="editorStore.currentTemplate.config.colors.text" 
-                  type="color"
-                />
-              </div>
-            </div>
-
-            <div class="sidebar-section">
-              <div class="grid-controls">
-                <label class="checkbox-label">
-                  <input type="checkbox" v-model="editorStore.showGrid" @change="editorStore.toggleGrid()" />
-                  <span>Raster anzeigen</span>
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" v-model="editorStore.snapToGrid" @change="editorStore.toggleSnap()" />
-                  <span>An Raster ausrichten</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="sidebar-section">
-              <div class="undo-redo-controls">
-                <button 
-                  @click="editorStore.undo()" 
-                  :disabled="!editorStore.canUndo"
-                  class="control-btn"
-                  title="Rückgängig (Ctrl+Z)"
-                >
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M3 7v6h6" stroke="currentColor" stroke-width="2"/>
-                    <path d="M3 13a9 9 0 1018 0 9 9 0 00-18 0" stroke="currentColor" stroke-width="2"/>
-                  </svg>
-                </button>
-                <button 
-                  @click="editorStore.redo()" 
-                  :disabled="!editorStore.canRedo"
-                  class="control-btn"
-                  title="Wiederholen (Ctrl+Y)"
-                >
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M21 7v6h-6" stroke="currentColor" stroke-width="2"/>
-                    <path d="M21 13a9 9 0 11-18 0 9 9 0 0118 0" stroke="currentColor" stroke-width="2"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Main Canvas Area -->
-          <div v-if="editorStore.currentTemplate" class="editor-main">
-            <TemplateCanvas
-              :elements="editorStore.currentTemplate.config.elements || []"
-              :selectedElement="editorStore.selectedElement"
-              :zoom="editorStore.zoom"
-              :showGrid="editorStore.showGrid"
-              :snapToGrid="editorStore.snapToGrid"
-              :gridSize="editorStore.gridSize"
-              :mode="editorStore.previewMode"
-              :testData="editorStore.getTestInvoiceData"
-              @elementUpdate="onElementUpdate"
-              @elementSelect="onElementSelect"
-              @elementContextMenu="onElementContextMenu"
-              @modeChange="onModeChange"
-              @zoomChange="onZoomChange"
-              @exportPdf="exportPdf"
-            />
-          </div>
-
-          <!-- Right Sidebar (Tabs) -->
-          <div class="sidebar sidebar-right">
-            <div class="sidebar-tabs">
-              <button
-                v-for="tab in tabs"
-                :key="tab.id"
-                @click="activeTab = tab.id"
-                :class="['tab-btn', { active: activeTab === tab.id }]"
-                :title="tab.label"
-              >
-                {{ tab.icon }} {{ tab.label }}
-              </button>
-            </div>
-
-            <div v-if="editorStore.currentTemplate" class="sidebar-content">
-              <!-- Logos Tab -->
-              <div v-show="activeTab === 'logos'" class="tab-content">
-                <LogoLibrary @logoAdded="onLogoAdded" />
-              </div>
-
-              <!-- Firmendaten Tab -->
-              <div v-show="activeTab === 'company'" class="tab-content">
-                <CompanyDataForm
-                  :modelValue="editorStore.currentTemplate.config.companyData"
-                  @update="onCompanyDataUpdate"
-                />
-              </div>
-
-              <!-- Bank Tab -->
-              <div v-show="activeTab === 'bank'" class="tab-content">
-                <BankDetailsForm
-                  :modelValue="editorStore.currentTemplate.config.bankDetails"
-                  @update="onBankDetailsUpdate"
-                />
-              </div>
-
-              <!-- Elements Tab -->
-              <div v-show="activeTab === 'elements'" class="tab-content">
-                <ElementToolbar @addElement="onAddElement" />
-              </div>
-
-              <!-- Properties Tab -->
-              <div v-show="activeTab === 'properties'" class="tab-content">
-                <PropertyPanel
-                  :selectedElement="editorStore.selectedElement"
-                  @update="onPropertyUpdate"
-                  @close="editorStore.selectElement(null)"
-                />
-              </div>
-            </div>
-          </div>
+          <TemplateCard
+            v-for="template in sortedTemplates"
+            :key="template.id"
+            :template="template"
+            @edit="editTemplate"
+            @setDefault="setAsDefault"
+            @delete="confirmDelete"
+          />
         </div>
       </div>
 
@@ -283,39 +67,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useTemplateStore } from '../stores/templates'
-import { useInvoiceTemplateStore } from '../stores/invoiceTemplate'
 import type { InvoiceTemplate } from '../stores/templates'
-import type { TemplateElement, TemplateConfig } from '../stores/invoiceTemplate'
 import MainLayout from '../layouts/MainLayout.vue'
-import TemplateCanvas from '../components/invoice-template/TemplateCanvas.vue'
-import LogoLibrary from '../components/invoice-template/LogoLibrary.vue'
-import CompanyDataForm from '../components/invoice-template/CompanyDataForm.vue'
-import BankDetailsForm from '../components/invoice-template/BankDetailsForm.vue'
-import ElementToolbar from '../components/invoice-template/ElementToolbar.vue'
-import PropertyPanel from '../components/invoice-template/PropertyPanel.vue'
+import TemplateCard from '../components/templates/TemplateCard.vue'
 
+const router = useRouter()
 const templateStore = useTemplateStore()
-const editorStore = useInvoiceTemplateStore()
 
 const loading = ref(false)
-const showEditor = ref(false)
 const showDeleteModal = ref(false)
 const templateToDelete = ref<InvoiceTemplate | null>(null)
-const saving = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
 const toastType = ref('success')
-const activeTab = ref('logos')
-
-const tabs = [
-  { id: 'logos', icon: '🖼️', label: 'Logos' },
-  { id: 'company', icon: '🏢', label: 'Firmendaten' },
-  { id: 'bank', icon: '💳', label: 'Bank' },
-  { id: 'elements', icon: '➕', label: 'Elemente' },
-  { id: 'properties', icon: '⚙️', label: 'Eigenschaften' }
-]
 
 const sortedTemplates = computed(() => templateStore.sortedTemplates)
 
@@ -323,302 +90,20 @@ onMounted(async () => {
   loading.value = true
   try {
     await templateStore.fetchTemplates()
-    
-    // Automatisch Standard-Vorlage laden und im Editor öffnen
-    const defaultTemplate = templateStore.templates.find(t => t.is_default)
-    if (defaultTemplate) {
-      console.log('Loading default template:', defaultTemplate.name)
-      editTemplate(defaultTemplate)
-    } else if (templateStore.templates.length > 0 && templateStore.templates[0]) {
-      // Falls kein Standard: Erstes Template laden
-      console.log('Loading first template:', templateStore.templates[0].name)
-      editTemplate(templateStore.templates[0])
-    }
   } catch (error) {
     console.error('Failed to load templates:', error)
     showToastMessage('Fehler beim Laden der Vorlagen', 'error')
   } finally {
     loading.value = false
   }
-  
-  // Register keyboard shortcuts
-  document.addEventListener('keydown', handleKeyDown)
 })
 
-function getPreviewStyle(template: InvoiceTemplate) {
-  const config = template.config as any
-  return {
-    borderTop: `4px solid ${config?.colors?.primary || '#1e3a8a'}`,
-    background: config?.colors?.background || '#ffffff'
-  }
-}
-
 function createNewTemplate() {
-  const newTemplate = {
-    name: 'Neue Vorlage',
-    is_default: false,
-    config: {
-      elements: [],
-      colors: {
-        primary: '#1e3a8a',
-        secondary: '#6b7280',
-        text: '#000000',
-        background: '#ffffff'
-      },
-      companyData: {
-        name: 'NIGHTDUTY GmbH',
-        address: 'Westendohrf 11',
-        city: '45143 Essen',
-        phone: '0201/8578670',
-        email: 'buchhaltung@nightduty.de',
-        website: 'www.nightduty.de'
-      },
-      bankDetails: {
-        iban: 'DE 72 1001 9000 1000 0097 62',
-        bic: 'ADYBDEB2',
-        bank: 'Advancia Bank'
-      },
-      grid: {
-        enabled: true,
-        size: 10,
-        snap: true
-      }
-    }
-  }
-  
-  editorStore.setCurrentTemplate(newTemplate as any)
-  showEditor.value = true
+  router.push('/rechnungsvorlage/editor/new')
 }
 
 function editTemplate(template: InvoiceTemplate) {
-  // Convert old template format to new format if needed
-  const templateConfig = template.config as any
-  
-  if (!templateConfig.elements) {
-    // Migrate old format to new format
-    const migratedConfig: TemplateConfig = {
-      elements: [],
-      colors: templateConfig.colors || {
-        primary: '#1e3a8a',
-        secondary: '#6b7280',
-        text: '#000000',
-        background: '#ffffff'
-      },
-      companyData: templateConfig.companyData || {
-        name: '',
-        address: '',
-        city: '',
-        phone: '',
-        email: '',
-        website: ''
-      },
-      bankDetails: templateConfig.bankDetails || {
-        iban: '',
-        bic: '',
-        bank: ''
-      },
-      grid: {
-        enabled: true,
-        size: 10,
-        snap: true
-      }
-    }
-    
-    let zIndex = 0
-    
-    // Convert logos array (new format) to elements
-    if (templateConfig.logos && Array.isArray(templateConfig.logos)) {
-      migratedConfig.elements = templateConfig.logos.map((logo: any) => ({
-        id: logo.id || `logo-${crypto.randomUUID()}`,
-        type: 'logo' as const,
-        x: logo.x,
-        y: logo.y,
-        width: logo.width,
-        height: logo.height,
-        zIndex: ++zIndex,
-        logoId: logo.id || `logo-${crypto.randomUUID()}`,
-        url: logo.url,
-        locked: false,
-        visible: true
-      }))
-    }
-    // Convert old single logo format (legacy support)
-    else if (templateConfig.logo) {
-      migratedConfig.elements.push({
-        id: 'logo-main',
-        type: 'logo' as const,
-        x: templateConfig.logo.x,
-        y: templateConfig.logo.y,
-        width: templateConfig.logo.width,
-        height: templateConfig.logo.height,
-        zIndex: ++zIndex,
-        logoId: 'logo-main',
-        url: templateConfig.logo.url,
-        locked: false,
-        visible: true
-      })
-    }
-    
-    // Convert company data to element
-    if (templateConfig.companyData) {
-      const cd = templateConfig.companyData
-      migratedConfig.elements.push({
-        id: 'company-data',
-        type: 'companyData' as const,
-        x: cd.x || 340,
-        y: cd.y || 165,
-        width: 200,
-        height: 100,
-        zIndex: ++zIndex,
-        name: cd.name || '',
-        address: cd.address || '',
-        city: cd.city || '',
-        phone: cd.phone || '',
-        email: cd.email || '',
-        website: cd.website || '',
-        fontSize: cd.fontSize || 9,
-        fontFamily: 'Arial, sans-serif',
-        color: cd.color || '#000000',
-        locked: false,
-        visible: true
-      })
-    }
-    
-    // Add invoice info element (new feature)
-    migratedConfig.elements.push({
-      id: 'invoice-info',
-      type: 'invoiceInfo' as const,
-      x: 460,
-      y: 140,
-      width: 280,
-      height: 100,
-      zIndex: ++zIndex,
-      fontSize: 9,
-      fontFamily: 'Arial, sans-serif',
-      color: '#000000',
-      fields: [
-        { label: 'UST-ID', value: '{UST_ID}' },
-        { label: 'Steuernummer', value: '{STEUERNUMMER}' },
-        { label: 'Datum', value: '{DATUM}' },
-        { label: 'Kundennummer', value: '{KUNDENNUMMER}' },
-        { label: 'INVOICE/Rechnung', value: '{RECHNUNGSNUMMER}' },
-        { label: 'Kundenbetreuer', value: '{BETREUER}' }
-      ],
-      locked: false,
-      visible: true
-    })
-    
-    // Add customer address element
-    migratedConfig.elements.push({
-      id: 'customer-address',
-      type: 'customerAddress' as const,
-      x: 70,
-      y: 260,
-      width: 300,
-      height: 80,
-      zIndex: ++zIndex,
-      fontSize: 10,
-      fontFamily: 'Arial, sans-serif',
-      color: '#000000',
-      locked: false,
-      visible: true
-    })
-    
-    // Convert table to element
-    if (templateConfig.table) {
-      const tbl = templateConfig.table
-      migratedConfig.elements.push({
-        id: 'invoice-table',
-        type: 'table' as const,
-        x: tbl.x || 50,
-        y: tbl.y || 350,
-        width: tbl.width || 495,
-        height: 200,
-        zIndex: ++zIndex,
-        headerBg: tbl.headerBg || '#f3f4f6',
-        headerText: tbl.headerText || '#000000',
-        rowBg: tbl.rowBg || '#ffffff',
-        alternateRowBg: tbl.alternateRowBg || '#fafafa',
-        columns: tbl.columns || [
-          { name: 'Art-Nr.', width: 55 },
-          { name: 'Bezeichnung', width: 200 },
-          { name: 'Menge', width: 50 },
-          { name: 'Einzelpreis', width: 70 },
-          { name: 'Betrag', width: 62 }
-        ],
-        locked: false,
-        visible: true
-      })
-    }
-    
-    // Convert footer to element
-    if (templateConfig.footer) {
-      const ft = templateConfig.footer
-      migratedConfig.elements.push({
-        id: 'footer-text',
-        type: 'footer' as const,
-        x: ft.x || 50,
-        y: ft.y || 735,
-        width: ft.width || 495,
-        height: 20,
-        zIndex: ++zIndex,
-        text: ft.text || '',
-        fontSize: ft.fontSize || 7,
-        fontFamily: 'Arial, sans-serif',
-        color: ft.color || '#64748b',
-        align: 'left',
-        locked: false,
-        visible: true
-      })
-    }
-    
-    // Convert bank details to element
-    if (templateConfig.bankDetails) {
-      const bd = templateConfig.bankDetails
-      migratedConfig.elements.push({
-        id: 'bank-details',
-        type: 'bankDetails' as const,
-        x: bd.x || 50,
-        y: bd.y || 745,
-        width: 300,
-        height: 40,
-        zIndex: ++zIndex,
-        iban: bd.iban || '',
-        bic: bd.bic || '',
-        bank: bd.bank || '',
-        fontSize: bd.fontSize || 6,
-        fontFamily: 'Arial, sans-serif',
-        color: '#000000',
-        locked: false,
-        visible: true
-      })
-    }
-    
-    template.config = migratedConfig
-  }
-  
-  editorStore.setCurrentTemplate(JSON.parse(JSON.stringify(template)))
-  showEditor.value = true
-}
-
-function closeEditor() {
-  showEditor.value = false
-  editorStore.setCurrentTemplate(null)
-}
-
-async function saveCurrentTemplate() {
-  if (!editorStore.currentTemplate) return
-  
-  saving.value = true
-  try {
-    await templateStore.saveTemplate(editorStore.currentTemplate)
-    showToastMessage('Vorlage erfolgreich gespeichert', 'success')
-  } catch (error) {
-    console.error('Failed to save template:', error)
-    showToastMessage('Fehler beim Speichern der Vorlage', 'error')
-  } finally {
-    saving.value = false
-  }
+  router.push(`/rechnungsvorlage/editor/${template.id}`)
 }
 
 function confirmDelete(template: InvoiceTemplate) {
@@ -649,140 +134,6 @@ async function setAsDefault(id: number) {
     showToastMessage('Fehler beim Setzen der Standard-Vorlage', 'error')
   }
 }
-
-// Editor event handlers
-function onElementUpdate(element: TemplateElement) {
-  editorStore.updateElement(element.id, element)
-}
-
-function onElementSelect(element: TemplateElement | null) {
-  editorStore.selectElement(element)
-  if (element) {
-    activeTab.value = 'properties'
-  }
-}
-
-function onElementContextMenu(action: string, element: TemplateElement) {
-  switch (action) {
-    case 'properties':
-      editorStore.selectElement(element)
-      activeTab.value = 'properties'
-      break
-    case 'duplicate':
-      editorStore.duplicateElement(element.id)
-      break
-    case 'forward':
-      editorStore.moveElementForward(element.id)
-      break
-    case 'backward':
-      editorStore.moveElementBackward(element.id)
-      break
-    case 'delete':
-      editorStore.removeElement(element.id)
-      break
-  }
-}
-
-function onModeChange(mode: 'editor' | 'test') {
-  editorStore.setPreviewMode(mode)
-}
-
-function onZoomChange(zoom: number) {
-  editorStore.setZoom(zoom)
-}
-
-function onAddElement(element: TemplateElement) {
-  editorStore.addElement(element)
-}
-
-function onLogoAdded() {
-  showToastMessage('Logo zur Vorlage hinzugefügt', 'success')
-}
-
-function onCompanyDataUpdate(data: any) {
-  if (editorStore.currentTemplate) {
-    editorStore.currentTemplate.config.companyData = data
-  }
-}
-
-function onBankDetailsUpdate(data: any) {
-  if (editorStore.currentTemplate) {
-    editorStore.currentTemplate.config.bankDetails = data
-  }
-}
-
-function onPropertyUpdate(property: string, value: any) {
-  if (editorStore.selectedElement) {
-    editorStore.updateElement(editorStore.selectedElement.id, {
-      [property]: value
-    })
-  }
-}
-
-function exportPdf() {
-  showToastMessage('PDF-Export wird in einem zukünftigen Update verfügbar sein', 'info')
-}
-
-// Keyboard shortcuts
-function handleKeyDown(event: KeyboardEvent) {
-  if (!showEditor.value) return
-  
-  // Ctrl/Cmd + S: Save
-  if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-    event.preventDefault()
-    saveCurrentTemplate()
-  }
-  
-  // Ctrl/Cmd + Z: Undo
-  if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
-    event.preventDefault()
-    editorStore.undo()
-  }
-  
-  // Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z: Redo
-  if ((event.ctrlKey || event.metaKey) && (event.key === 'y' || (event.key === 'z' && event.shiftKey))) {
-    event.preventDefault()
-    editorStore.redo()
-  }
-  
-  // Delete: Remove selected element
-  if (event.key === 'Delete' && editorStore.selectedElement) {
-    event.preventDefault()
-    editorStore.removeElement(editorStore.selectedElement.id)
-  }
-  
-  // Ctrl/Cmd + D: Duplicate selected element
-  if ((event.ctrlKey || event.metaKey) && event.key === 'd' && editorStore.selectedElement) {
-    event.preventDefault()
-    editorStore.duplicateElement(editorStore.selectedElement.id)
-  }
-  
-  // Arrow keys: Move selected element
-  if (editorStore.selectedElement && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
-    event.preventDefault()
-    const step = event.shiftKey ? 10 : 1
-    const element = editorStore.selectedElement
-    
-    switch (event.key) {
-      case 'ArrowUp':
-        editorStore.updateElement(element.id, { y: element.y - step })
-        break
-      case 'ArrowDown':
-        editorStore.updateElement(element.id, { y: element.y + step })
-        break
-      case 'ArrowLeft':
-        editorStore.updateElement(element.id, { x: element.x - step })
-        break
-      case 'ArrowRight':
-        editorStore.updateElement(element.id, { x: element.x + step })
-        break
-    }
-  }
-}
-
-onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeyDown)
-})
 
 function showToastMessage(message: string, type: string = 'success') {
   toastMessage.value = message
