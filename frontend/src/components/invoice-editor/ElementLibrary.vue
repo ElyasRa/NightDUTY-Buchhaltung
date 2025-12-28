@@ -1,89 +1,76 @@
 <template>
   <div class="element-library">
     <h3>📚 Element-Bibliothek</h3>
-    <p class="subtitle">Ziehen Sie Elemente auf die Leinwand</p>
+    <p class="subtitle">Klicken Sie auf ein Element, um es hinzuzufügen</p>
 
     <div class="library-section">
       <h4>Text & Inhalt</h4>
-      <draggable 
-        v-model="textElements" 
-        :group="{ name: 'elements', pull: 'clone', put: false }"
-        :clone="cloneElement"
-        class="element-list"
-        @start="onDragStart"
-        @end="onDragEnd"
-      >
-        <template #item="{ element }">
-          <div class="element-item" :data-type="element.type">
-            <span class="element-icon">{{ element.icon }}</span>
-            <span class="element-label">{{ element.label }}</span>
-          </div>
-        </template>
-      </draggable>
+      <div class="element-list">
+        <div 
+          v-for="element in textElements" 
+          :key="element.type"
+          class="element-item" 
+          :data-type="element.type"
+          @click="handleElementClick(element.type)"
+        >
+          <span class="element-icon">{{ element.icon }}</span>
+          <span class="element-label">{{ element.label }}</span>
+        </div>
+      </div>
     </div>
 
     <div class="library-section">
       <h4>Firmendaten</h4>
-      <draggable 
-        v-model="companyElements" 
-        :group="{ name: 'elements', pull: 'clone', put: false }"
-        :clone="cloneElement"
-        class="element-list"
-        @start="onDragStart"
-        @end="onDragEnd"
-      >
-        <template #item="{ element }">
-          <div class="element-item" :data-type="element.type">
-            <span class="element-icon">{{ element.icon }}</span>
-            <span class="element-label">{{ element.label }}</span>
-          </div>
-        </template>
-      </draggable>
+      <div class="element-list">
+        <div 
+          v-for="element in companyElements" 
+          :key="element.type"
+          class="element-item" 
+          :data-type="element.type"
+          @click="handleElementClick(element.type)"
+        >
+          <span class="element-icon">{{ element.icon }}</span>
+          <span class="element-label">{{ element.label }}</span>
+        </div>
+      </div>
     </div>
 
     <div class="library-section">
       <h4>Rechnungsdaten</h4>
-      <draggable 
-        v-model="invoiceElements" 
-        :group="{ name: 'elements', pull: 'clone', put: false }"
-        :clone="cloneElement"
-        class="element-list"
-        @start="onDragStart"
-        @end="onDragEnd"
-      >
-        <template #item="{ element }">
-          <div class="element-item" :data-type="element.type">
-            <span class="element-icon">{{ element.icon }}</span>
-            <span class="element-label">{{ element.label }}</span>
-          </div>
-        </template>
-      </draggable>
+      <div class="element-list">
+        <div 
+          v-for="element in invoiceElements" 
+          :key="element.type"
+          class="element-item" 
+          :data-type="element.type"
+          @click="handleElementClick(element.type)"
+        >
+          <span class="element-icon">{{ element.icon }}</span>
+          <span class="element-label">{{ element.label }}</span>
+        </div>
+      </div>
     </div>
 
     <div class="library-section">
       <h4>Visuelle Elemente</h4>
-      <draggable 
-        v-model="visualElements" 
-        :group="{ name: 'elements', pull: 'clone', put: false }"
-        :clone="cloneElement"
-        class="element-list"
-        @start="onDragStart"
-        @end="onDragEnd"
-      >
-        <template #item="{ element }">
-          <div class="element-item" :data-type="element.type">
-            <span class="element-icon">{{ element.icon }}</span>
-            <span class="element-label">{{ element.label }}</span>
-          </div>
-        </template>
-      </draggable>
+      <div class="element-list">
+        <div 
+          v-for="element in visualElements" 
+          :key="element.type"
+          class="element-item" 
+          :data-type="element.type"
+          @click="handleElementClick(element.type)"
+        >
+          <span class="element-icon">{{ element.icon }}</span>
+          <span class="element-label">{{ element.label }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import draggable from 'vuedraggable'
 
 const emit = defineEmits<{
   elementDrop: [type: string]
@@ -116,19 +103,8 @@ const visualElements = ref([
   { type: 'shape', icon: '⭕', label: 'Form' }
 ])
 
-function cloneElement(element: any) {
-  return { ...element }
-}
-
-function onDragStart(event: any) {
-  console.log('Drag started:', event)
-}
-
-function onDragEnd(event: any) {
-  console.log('Drag ended:', event)
-  if (event.item && event.item.dataset.type) {
-    emit('elementDrop', event.item.dataset.type)
-  }
+function handleElementClick(type: string) {
+  emit('elementDrop', type)
 }
 </script>
 
@@ -180,7 +156,7 @@ function onDragEnd(event: any) {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  cursor: grab;
+  cursor: pointer;
   transition: all 0.2s;
 }
 
@@ -191,7 +167,8 @@ function onDragEnd(event: any) {
 }
 
 .element-item:active {
-  cursor: grabbing;
+  transform: translateX(2px);
+  background: rgba(255, 0, 110, 0.2);
 }
 
 .element-icon {
