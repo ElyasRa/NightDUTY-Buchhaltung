@@ -16,7 +16,7 @@ export interface Logo {
 // Draggable element interfaces
 export interface DraggableElement {
   id: string
-  type: 'logo' | 'text' | 'placeholder' | 'table' | 'line'
+  type: 'logo' | 'text' | 'placeholder' | 'table' | 'line' | 'companyData' | 'invoiceInfo' | 'footer' | 'bankDetails' | 'customerAddress'
   x: number
   y: number
   width: number
@@ -67,7 +67,54 @@ export interface LineElement extends DraggableElement {
   color: string
 }
 
-export type TemplateElement = LogoElement | TextElement | PlaceholderElement | TableElement | LineElement
+export interface CompanyDataElement extends DraggableElement {
+  type: 'companyData'
+  name: string
+  address: string
+  city: string
+  phone: string
+  email: string
+  website: string
+  fontSize: number
+  fontFamily?: string
+  color: string
+}
+
+export interface InvoiceInfoElement extends DraggableElement {
+  type: 'invoiceInfo'
+  fontSize: number
+  fontFamily?: string
+  color: string
+  fields: Array<{ label: string; value: string }>
+}
+
+export interface FooterElement extends DraggableElement {
+  type: 'footer'
+  text: string
+  fontSize: number
+  fontFamily?: string
+  color: string
+  align?: 'left' | 'center' | 'right'
+}
+
+export interface BankDetailsElement extends DraggableElement {
+  type: 'bankDetails'
+  iban: string
+  bic: string
+  bank: string
+  fontSize: number
+  fontFamily?: string
+  color: string
+}
+
+export interface CustomerAddressElement extends DraggableElement {
+  type: 'customerAddress'
+  fontSize: number
+  fontFamily?: string
+  color: string
+}
+
+export type TemplateElement = LogoElement | TextElement | PlaceholderElement | TableElement | LineElement | CompanyDataElement | InvoiceInfoElement | FooterElement | BankDetailsElement | CustomerAddressElement
 
 // Template configuration
 export interface TemplateConfig {
@@ -113,6 +160,10 @@ export interface TestInvoiceData {
   invoiceNumber: string
   date: string
   dueDate: string
+  ustId?: string
+  taxNumber?: string
+  customerNumber?: string
+  accountManager?: string
   customer: {
     name: string
     address: string
@@ -176,13 +227,17 @@ export const useInvoiceTemplateStore = defineStore('invoiceTemplate', {
       
       // Generate default test data
       return {
-        invoiceNumber: 'RE-2025-001',
+        invoiceNumber: 'RE-2025-0002',
         date: new Date().toLocaleDateString('de-DE'),
         dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('de-DE'),
+        ustId: 'DE312802879',
+        taxNumber: '111/57630795',
+        customerNumber: '10010',
+        accountManager: 'Max Mustermann',
         customer: {
-          name: 'Musterfirma GmbH',
-          address: 'Musterstraße 123',
-          city: '12345 Musterstadt'
+          name: 'A. B. Abschleppdienst Bad Homburg GmbH',
+          address: 'Daimlerstraße 12',
+          city: '61352 Bad Homburg vor der Höhe'
         },
         positions: [
           { pos: 1, description: 'Nachtdienst 01.12.2025', quantity: 8, price: 45.00, total: 360.00 },

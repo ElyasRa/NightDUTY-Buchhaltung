@@ -154,6 +154,11 @@ import TextElementRender from './elements/TextElementRender.vue'
 import PlaceholderElementRender from './elements/PlaceholderElementRender.vue'
 import TableElementRender from './elements/TableElementRender.vue'
 import LineElementRender from './elements/LineElementRender.vue'
+import CompanyDataElementRender from './elements/CompanyDataElementRender.vue'
+import InvoiceInfoElementRender from './elements/InvoiceInfoElementRender.vue'
+import FooterElementRender from './elements/FooterElementRender.vue'
+import BankDetailsElementRender from './elements/BankDetailsElementRender.vue'
+import CustomerAddressElementRender from './elements/CustomerAddressElementRender.vue'
 import type { TemplateElement, TestInvoiceData } from '../../stores/invoiceTemplate'
 
 interface Props {
@@ -234,6 +239,11 @@ const getElementComponent = (element: TemplateElement) => {
     case 'placeholder': return PlaceholderElementRender
     case 'table': return TableElementRender
     case 'line': return LineElementRender
+    case 'companyData': return CompanyDataElementRender
+    case 'invoiceInfo': return InvoiceInfoElementRender
+    case 'footer': return FooterElementRender
+    case 'bankDetails': return BankDetailsElementRender
+    case 'customerAddress': return CustomerAddressElementRender
     default: return 'div'
   }
 }

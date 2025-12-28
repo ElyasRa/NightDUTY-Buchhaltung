@@ -423,16 +423,18 @@ function editTemplate(template: InvoiceTemplate) {
       }
     }
     
+    let zIndex = 0
+    
     // Convert logos array (new format) to elements
     if (templateConfig.logos && Array.isArray(templateConfig.logos)) {
-      migratedConfig.elements = templateConfig.logos.map((logo: any, index: number) => ({
+      migratedConfig.elements = templateConfig.logos.map((logo: any) => ({
         id: logo.id || `logo-${crypto.randomUUID()}`,
         type: 'logo' as const,
         x: logo.x,
         y: logo.y,
         width: logo.width,
         height: logo.height,
-        zIndex: index + 1,
+        zIndex: ++zIndex,
         logoId: logo.id || `logo-${crypto.randomUUID()}`,
         url: logo.url,
         locked: false,
@@ -441,19 +443,154 @@ function editTemplate(template: InvoiceTemplate) {
     }
     // Convert old single logo format (legacy support)
     else if (templateConfig.logo) {
-      migratedConfig.elements = [{
+      migratedConfig.elements.push({
         id: 'logo-main',
         type: 'logo' as const,
         x: templateConfig.logo.x,
         y: templateConfig.logo.y,
         width: templateConfig.logo.width,
         height: templateConfig.logo.height,
-        zIndex: 1,
+        zIndex: ++zIndex,
         logoId: 'logo-main',
         url: templateConfig.logo.url,
         locked: false,
         visible: true
-      }]
+      })
+    }
+    
+    // Convert company data to element
+    if (templateConfig.companyData) {
+      const cd = templateConfig.companyData
+      migratedConfig.elements.push({
+        id: 'company-data',
+        type: 'companyData' as const,
+        x: cd.x || 340,
+        y: cd.y || 165,
+        width: 200,
+        height: 100,
+        zIndex: ++zIndex,
+        name: cd.name || '',
+        address: cd.address || '',
+        city: cd.city || '',
+        phone: cd.phone || '',
+        email: cd.email || '',
+        website: cd.website || '',
+        fontSize: cd.fontSize || 9,
+        fontFamily: 'Arial, sans-serif',
+        color: cd.color || '#000000',
+        locked: false,
+        visible: true
+      })
+    }
+    
+    // Add invoice info element (new feature)
+    migratedConfig.elements.push({
+      id: 'invoice-info',
+      type: 'invoiceInfo' as const,
+      x: 460,
+      y: 140,
+      width: 280,
+      height: 100,
+      zIndex: ++zIndex,
+      fontSize: 9,
+      fontFamily: 'Arial, sans-serif',
+      color: '#000000',
+      fields: [
+        { label: 'UST-ID', value: '{UST_ID}' },
+        { label: 'Steuernummer', value: '{STEUERNUMMER}' },
+        { label: 'Datum', value: '{DATUM}' },
+        { label: 'Kundennummer', value: '{KUNDENNUMMER}' },
+        { label: 'INVOICE/Rechnung', value: '{RECHNUNGSNUMMER}' },
+        { label: 'Kundenbetreuer', value: '{BETREUER}' }
+      ],
+      locked: false,
+      visible: true
+    })
+    
+    // Add customer address element
+    migratedConfig.elements.push({
+      id: 'customer-address',
+      type: 'customerAddress' as const,
+      x: 70,
+      y: 260,
+      width: 300,
+      height: 80,
+      zIndex: ++zIndex,
+      fontSize: 10,
+      fontFamily: 'Arial, sans-serif',
+      color: '#000000',
+      locked: false,
+      visible: true
+    })
+    
+    // Convert table to element
+    if (templateConfig.table) {
+      const tbl = templateConfig.table
+      migratedConfig.elements.push({
+        id: 'invoice-table',
+        type: 'table' as const,
+        x: tbl.x || 50,
+        y: tbl.y || 350,
+        width: tbl.width || 495,
+        height: 200,
+        zIndex: ++zIndex,
+        headerBg: tbl.headerBg || '#f3f4f6',
+        headerText: tbl.headerText || '#000000',
+        rowBg: tbl.rowBg || '#ffffff',
+        alternateRowBg: tbl.alternateRowBg || '#fafafa',
+        columns: tbl.columns || [
+          { name: 'Art-Nr.', width: 55 },
+          { name: 'Bezeichnung', width: 200 },
+          { name: 'Menge', width: 50 },
+          { name: 'Einzelpreis', width: 70 },
+          { name: 'Betrag', width: 62 }
+        ],
+        locked: false,
+        visible: true
+      })
+    }
+    
+    // Convert footer to element
+    if (templateConfig.footer) {
+      const ft = templateConfig.footer
+      migratedConfig.elements.push({
+        id: 'footer-text',
+        type: 'footer' as const,
+        x: ft.x || 50,
+        y: ft.y || 735,
+        width: ft.width || 495,
+        height: 20,
+        zIndex: ++zIndex,
+        text: ft.text || '',
+        fontSize: ft.fontSize || 7,
+        fontFamily: 'Arial, sans-serif',
+        color: ft.color || '#64748b',
+        align: 'left',
+        locked: false,
+        visible: true
+      })
+    }
+    
+    // Convert bank details to element
+    if (templateConfig.bankDetails) {
+      const bd = templateConfig.bankDetails
+      migratedConfig.elements.push({
+        id: 'bank-details',
+        type: 'bankDetails' as const,
+        x: bd.x || 50,
+        y: bd.y || 745,
+        width: 300,
+        height: 40,
+        zIndex: ++zIndex,
+        iban: bd.iban || '',
+        bic: bd.bic || '',
+        bank: bd.bank || '',
+        fontSize: bd.fontSize || 6,
+        fontFamily: 'Arial, sans-serif',
+        color: '#000000',
+        locked: false,
+        visible: true
+      })
     }
     
     template.config = migratedConfig
