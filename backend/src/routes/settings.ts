@@ -110,21 +110,28 @@ router.post('/test-connection', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Alle SMTP-Felder müssen ausgefüllt sein' })
     }
     
-    const success = await testSmtpConnection(
+    const result = await testSmtpConnection(
       smtp_host,
       parseInt(smtp_port),
       smtp_user,
       smtp_password
     )
     
-    if (success) {
-      res.json({ success: true, message: 'Verbindung erfolgreich!' })
+    if (result.success) {
+      res.json({ success: true, message: 'Verbindung erfolgreich! ✅ SMTP-Server ist erreichbar.' })
     } else {
-      res.json({ success: false, message: 'Verbindung fehlgeschlagen. Bitte überprüfen Sie die Einstellungen.' })
+      res.json({ 
+        success: false, 
+        message: `Verbindung fehlgeschlagen: ${result.error}`,
+        details: result.error
+      })
     }
   } catch (error) {
     console.error('Error testing connection:', error)
-    res.status(500).json({ error: 'Fehler beim Testen der Verbindung' })
+    res.status(500).json({ 
+      error: 'Fehler beim Testen der Verbindung',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    })
   }
 })
 

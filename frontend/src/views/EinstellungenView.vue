@@ -76,6 +76,16 @@
             <span v-else>⏳ Teste...</span>
           </button>
         </div>
+
+        <div v-if="testResult" class="test-result" :class="testResult.success ? 'success' : 'error'">
+          <div class="test-result-icon">
+            {{ testResult.success ? '✅' : '❌' }}
+          </div>
+          <div class="test-result-content">
+            <div class="test-result-message">{{ testResult.message }}</div>
+            <div v-if="testResult.details" class="test-result-details">{{ testResult.details }}</div>
+          </div>
+        </div>
       </div>
 
       <!-- Email Templates Section -->
@@ -172,6 +182,7 @@ const loading = ref(false)
 const testing = ref(false)
 const successMessage = ref('')
 const errorMessage = ref('')
+const testResult = ref<{ success: boolean; message: string; details?: string } | null>(null)
 
 onMounted(async () => {
   await loadSettings()
@@ -196,6 +207,7 @@ async function testConnection() {
   testing.value = true
   errorMessage.value = ''
   successMessage.value = ''
+  testResult.value = null
 
   try {
     const token = localStorage.getItem('token')
@@ -212,13 +224,25 @@ async function testConnection() {
       }
     )
 
+    testResult.value = {
+      success: response.data.success,
+      message: response.data.message,
+      details: response.data.details
+    }
+
     if (response.data.success) {
       successMessage.value = '✅ ' + response.data.message
     } else {
       errorMessage.value = '❌ ' + response.data.message
     }
   } catch (error: any) {
-    errorMessage.value = '❌ Fehler beim Testen der Verbindung: ' + (error.response?.data?.error || error.message)
+    const details = error.response?.data?.details || error.message
+    testResult.value = {
+      success: false,
+      message: 'Verbindung fehlgeschlagen',
+      details
+    }
+    errorMessage.value = '❌ Fehler beim Testen der Verbindung: ' + details
   } finally {
     testing.value = false
   }
@@ -445,5 +469,61 @@ async function saveSettings() {
 .btn-secondary:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.15);
   color: #ffffff;
+}
+
+.test-result {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.test-result.success {
+  background-color: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.test-result.error {
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.test-result-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.test-result-content {
+  flex: 1;
+}
+
+.test-result-message {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.test-result.success .test-result-message {
+  color: #10b981;
+}
+
+.test-result.error .test-result-message {
+  color: #ef4444;
+}
+
+.test-result-details {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+.test-result.success .test-result-details {
+  color: #10b981;
+}
+
+.test-result.error .test-result-details {
+  color: #ef4444;
 }
 </style>
