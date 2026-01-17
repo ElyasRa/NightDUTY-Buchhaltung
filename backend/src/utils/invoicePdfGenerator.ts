@@ -42,7 +42,14 @@ interface InvoiceData {
   notes?: string
 }
 
-export function generateInvoicePDF(data: InvoiceData, res: Response) {
+interface InvoiceTemplate {
+  id: number
+  name: string
+  is_default: boolean
+  config: any
+}
+
+export function generateInvoicePDF(data: InvoiceData, res: Response, template?: InvoiceTemplate) {
   const doc = new PDFDocument({ 
     margin: 0,
     size: 'A4'
@@ -58,20 +65,58 @@ export function generateInvoicePDF(data: InvoiceData, res: Response) {
   const pageHeight = 841.89
   const margin = 50
   
+  // Extract template configuration with defaults
+  const config = template?.config || {}
+  const colors = config.colors || {
+    primary: '#1e3a8a',
+    secondary: '#6b7280',
+    text: '#000000',
+    background: '#ffffff'
+  }
+  
+  // Get logo configuration from template
+  const logoConfig = config.logo || config.logos?.[0] || {
+    x: 330,
+    y: 65,
+    width: 220,
+    url: '/images/logo.png'
+  }
+  
+  // Get company data from template
+  const companyData = config.companyData || {
+    name: 'NIGHTDUTY GmbH',
+    address: 'Westendohrf 11',
+    city: '45143 Essen',
+    phone: '0201/8578670',
+    email: 'buchhaltung@nightduty.de',
+    website: 'www.nightduty.de'
+  }
+  
+  // Get bank details from template
+  const bankDetails = config.bankDetails || {
+    iban: 'DE 72 1001 9000 1000 0097 62',
+    bic: 'ADYBDEB2',
+    bank: 'Advancia Bank'
+  }
+  
   // ==================== GRAUER BALKEN GANZ OBEN ====================
-  doc.rect(0, 0, pageWidth, 8).fill('#6b7280')
+  doc.rect(0, 0, pageWidth, 8).fill(colors.secondary)
   
   // ==================== BLAUER BALKEN ====================
-  doc.rect(0, 8, pageWidth, 28).fill('#1e3a8a')
+  doc.rect(0, 8, pageWidth, 28).fill(colors.primary)
   
   let y = 65
   
-  // ==================== NIGHTDUTY LOGO (RECHTS OBEN) ====================
-  const logoPath = path.join(__dirname, '../../public/images/logo.png')
+  // ==================== LOGO (RECHTS OBEN) ====================
+  const logoPath = logoConfig.url.startsWith('/') 
+    ? path.join(__dirname, '../../public', logoConfig.url)
+    : path.join(__dirname, '../../public/images/logo.png')
   
   if (fs.existsSync(logoPath)) {
     try {
-      doc.image(logoPath, 330, y, { width: 220 })
+      doc.image(logoPath, logoConfig.x || 330, logoConfig.y || y, { 
+        width: logoConfig.width || 220 
+      })
       y += 100
     } catch (err) {
       console.error('Logo konnte nicht geladen werden:', err)
@@ -82,8 +127,8 @@ export function generateInvoicePDF(data: InvoiceData, res: Response) {
   }
   
   // ==================== FIRMENADRESSE UNTER LOGO ====================
-  doc.fontSize(8).fillColor('#1e3a8a').font('Helvetica')
-  doc.text('NIGHTDUTY GmbH - Westendohrf11 - 45143 Essen', margin, y)
+  doc.fontSize(8).fillColor(colors.primary).font('Helvetica')
+  doc.text(`${companyData.name} - ${companyData.address} - ${companyData.city}`, margin, y)
   
   y += 30
   
@@ -94,11 +139,11 @@ export function generateInvoicePDF(data: InvoiceData, res: Response) {
   // EMPFÄNGER LINKS
   let leftY = y
   
-  doc.fontSize(10).fillColor('#1e3a8a').font('Helvetica-Bold')
+  doc.fontSize(10).fillColor(colors.primary).font('Helvetica-Bold')
   doc.text(data.company.name, leftX, leftY)
   leftY += 13
   
-  doc.fontSize(9).fillColor('#000000').font('Helvetica')
+  doc.fontSize(9).fillColor(colors.text).font('Helvetica')
   if (data.company.address) {
     doc.text(data.company.address, leftX, leftY)
     leftY += 12
@@ -111,13 +156,13 @@ export function generateInvoicePDF(data: InvoiceData, res: Response) {
   // FIRMEN-INFOS RECHTS
   let rightY = y
   
-  doc.fontSize(9).fillColor('#000000').font('Helvetica')
+  doc.fontSize(9).fillColor(colors.text).font('Helvetica')
   
   const infos = [
     ['UST-ID:', 'DE312802879'],
     ['Steuernummer:', '111/5763/0795'],
-    ['Telefon:', '0201/8578670'],
-    ['E-Mail:', 'buchhaltung@nightduty.de']
+    ['Telefon:', companyData.phone || '0201/8578670'],
+    ['E-Mail:', companyData.email || 'buchhaltung@nightduty.de']
   ]
   
   infos.forEach(([label, value]) => {
@@ -143,14 +188,14 @@ export function generateInvoicePDF(data: InvoiceData, res: Response) {
   y = Math.max(leftY, rightY) + 30
   
   // ==================== EINLEITUNGSTEXT ====================
-  doc.fontSize(9).fillColor('#000000').font('Helvetica')
+  doc.fontSize(9).fillColor(colors.text).font('Helvetica')
   doc.text('Aufgrund unserer AGB und des bestehenden Dienstleistungsvertrages erlauben wir uns zu berechnen:', 
     margin, y, { width: 495 })
   
   y += 28
   
   // ==================== RECHNUNGSTITEL ====================
-  doc.fontSize(13).fillColor('#1e3a8a').font('Helvetica-Bold')
+  doc.fontSize(13).fillColor(colors.primary).font('Helvetica-Bold')
   doc.text(`INVOICE/Rechnung ${data.invoice_number}`, margin, y)
   
   y += 28
@@ -160,10 +205,10 @@ export function generateInvoicePDF(data: InvoiceData, res: Response) {
   const tableWidth = 495
   
   doc.rect(tableLeft, y, tableWidth, 22).fill('#f3f4f6')
-  doc.strokeColor('#000000').lineWidth(1)
+  doc.strokeColor(colors.text).lineWidth(1)
   doc.rect(tableLeft, y, tableWidth, 22).stroke()
   
-  doc.fontSize(9).fillColor('#000000').font('Helvetica-Bold')
+  doc.fontSize(9).fillColor(colors.text).font('Helvetica-Bold')
   doc.text('Art-Nr.', tableLeft + 8, y + 7, { width: 55 })
   doc.text('Bezeichnung', tableLeft + 75, y + 7, { width: 200 })
   doc.text('Menge', tableLeft + 285, y + 7, { width: 50, align: 'center' })
@@ -178,7 +223,7 @@ export function generateInvoicePDF(data: InvoiceData, res: Response) {
   doc.fontSize(9).font('Helvetica')
   
   const addRow = (art: number, bez: string, menge: string, preis: string, betrag: string) => {
-    doc.strokeColor('#000000').lineWidth(1)
+    doc.strokeColor(colors.text).lineWidth(1)
     doc.moveTo(tableLeft, y).lineTo(tableLeft, y + rowHeight).stroke()
     doc.moveTo(tableLeft + tableWidth, y).lineTo(tableLeft + tableWidth, y + rowHeight).stroke()
     doc.moveTo(tableLeft, y + rowHeight).lineTo(tableLeft + tableWidth, y + rowHeight).stroke()
@@ -189,7 +234,7 @@ export function generateInvoicePDF(data: InvoiceData, res: Response) {
     doc.moveTo(tableLeft + 340, y).lineTo(tableLeft + 340, y + rowHeight).stroke()
     doc.moveTo(tableLeft + 420, y).lineTo(tableLeft + 420, y + rowHeight).stroke()
     
-    doc.fillColor('#000000')
+    doc.fillColor(colors.text)
     doc.text(art.toString(), tableLeft + 8, y + 7, { width: 55 })
     doc.text(bez, tableLeft + 75, y + 7, { width: 200 })
     doc.text(menge, tableLeft + 285, y + 7, { width: 50, align: 'center' })
@@ -250,17 +295,17 @@ export function generateInvoicePDF(data: InvoiceData, res: Response) {
   }
   
   doc.rect(tableLeft, y, tableWidth, 22).fill('#ffffff')
-  doc.strokeColor('#000000').lineWidth(1)
+  doc.strokeColor(colors.text).lineWidth(1)
   doc.rect(tableLeft, y, tableWidth, 22).stroke()
   
-  doc.fontSize(10).fillColor('#000000').font('Helvetica-Bold')
+  doc.fontSize(10).fillColor(colors.text).font('Helvetica-Bold')
   doc.text('Rechnungsbetrag', tableLeft + 285, y + 7, { width: 130, align: 'left' })
   doc.text(`${data.total_amount.toFixed(2)} €`, tableLeft + 425, y + 7, { width: 62, align: 'right' })
   
   y += 35
   
   // ==================== ZAHLUNGSTEXT ====================
-  doc.fontSize(9).fillColor('#000000').font('Helvetica')
+  doc.fontSize(9).fillColor(colors.text).font('Helvetica')
   const dueDate = formatDate(data.due_date)
   doc.text(
     `Wir bedanken uns für die partnerschaftliche Zusammenarbeit und bitten um Begleichung des Rechnungsbetrages bis zum ${dueDate} auf die unten angegebene Kontonummer.`,
@@ -288,21 +333,21 @@ export function generateInvoicePDF(data: InvoiceData, res: Response) {
   doc.fontSize(7).fillColor('#64748b').font('Helvetica-Bold')
   doc.text('BANKVERBINDUNG', margin, footerY + 10)
   
-  doc.fontSize(6).fillColor('#1e3a8a').font('Helvetica')
+  doc.fontSize(6).fillColor(colors.primary).font('Helvetica')
   doc.text('IBAN', margin, footerY + 23)
-  doc.fillColor('#000000').fontSize(6)
-  doc.text('DE 72 1001 9000 1000 0097 62', margin, footerY + 33)
+  doc.fillColor(colors.text).fontSize(6)
+  doc.text(bankDetails.iban || 'DE 72 1001 9000 1000 0097 62', margin, footerY + 33)
   
-  doc.fontSize(6).fillColor('#1e3a8a').font('Helvetica')
+  doc.fontSize(6).fillColor(colors.primary).font('Helvetica')
   doc.text('BIC', margin, footerY + 47)
-  doc.fillColor('#000000').fontSize(6)
-  doc.text('ADYBDEB2', margin, footerY + 57)
+  doc.fillColor(colors.text).fontSize(6)
+  doc.text(bankDetails.bic || 'ADYBDEB2', margin, footerY + 57)
   
   // ========== SPALTE 2: UNTERNEHMENSDETAILS ==========
   doc.fontSize(7).fillColor('#64748b').font('Helvetica-Bold')
   doc.text('UNTERNEHMENSDETAILS', 260, footerY + 10)
   
-  doc.fontSize(6).fillColor('#000000').font('Helvetica')
+  doc.fontSize(6).fillColor(colors.text).font('Helvetica')
   doc.text('Registergericht Essen  |  HRB 28180', 260, footerY + 25)
   doc.text('Geschäftsführer', 260, footerY + 38)
   doc.text('Roland Müller-Roth  |  Karsten Roth', 260, footerY + 48)
@@ -323,20 +368,20 @@ export function generateInvoicePDF(data: InvoiceData, res: Response) {
   doc.fontSize(7).fillColor('#64748b').font('Helvetica-Bold')
   doc.text('KONTAKT', col3X, footerY + 10, { width: col3Width, align: 'left' })
   
-  doc.fontSize(7).fillColor('#1e3a8a').font('Helvetica-Bold')
-  doc.text('NIGHTDUTY GmbH', col3X, footerY + 25, { width: col3Width, align: 'left' })
+  doc.fontSize(7).fillColor(colors.primary).font('Helvetica-Bold')
+  doc.text(companyData.name || 'NIGHTDUTY GmbH', col3X, footerY + 25, { width: col3Width, align: 'left' })
   
-  doc.fontSize(6).fillColor('#000000').font('Helvetica')
-  doc.text('Westend 11', col3X, footerY + 38, { width: col3Width, align: 'left' })
-  doc.text('D-45143 Essen', col3X, footerY + 48, { width: col3Width, align: 'left' })
+  doc.fontSize(6).fillColor(colors.text).font('Helvetica')
+  doc.text(companyData.address || 'Westend 11', col3X, footerY + 38, { width: col3Width, align: 'left' })
+  doc.text(companyData.city || 'D-45143 Essen', col3X, footerY + 48, { width: col3Width, align: 'left' })
   doc.text('Karsten Roth', col3X, footerY + 58, { width: col3Width, align: 'left' })
   
   // ==================== PREMIUM BLAUER BALKEN UNTEN ====================
-  doc.rect(0, pageHeight - 15, pageWidth, 15).fill('#1e3a8a')
+  doc.rect(0, pageHeight - 15, pageWidth, 15).fill(colors.primary)
   
   // Kleiner eleganter Text im blauen Balken
   doc.fontSize(6).fillColor('#ffffff').font('Helvetica')
-  doc.text('NIGHTDUTY GmbH  •  www.nightduty.de  •  info@nightduty.de', 0, pageHeight - 10, {
+  doc.text(`${companyData.name || 'NIGHTDUTY GmbH'}  •  ${companyData.website || 'www.nightduty.de'}  •  ${companyData.email || 'info@nightduty.de'}`, 0, pageHeight - 10, {
     width: pageWidth,
     align: 'center'
   })
