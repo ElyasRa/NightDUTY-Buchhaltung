@@ -484,8 +484,11 @@ async function downloadPDF() {
 
 function createAnother() {
   createdInvoice.value = null
+  // Get default template
+  const defaultTemplate = templates.value.find(t => t.is_default)
   formData.value = {
     company_id: null,
+    template_id: defaultTemplate?.id || null,
     period_start: '',
     period_end: '',
     invoice_date: new Date().toISOString().split('T')[0],
