@@ -91,6 +91,8 @@ model Invoice {
   invoice_number  String    @unique
   company_id      Int
   company         Company   @relation(fields: [company_id], references: [id])
+  template_id     Int?
+  template        InvoiceTemplate? @relation(fields: [template_id], references: [id])
   
   invoice_date    DateTime
   due_date        DateTime
@@ -200,13 +202,14 @@ model HoursCompensation {
 }
 
 model InvoiceTemplate {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   name        String   
-  is_default  Boolean  @default(false)
+  is_default  Boolean   @default(false)
   config      Json
   created_by  String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  invoices    Invoice[]
 }
 
 model Logo {

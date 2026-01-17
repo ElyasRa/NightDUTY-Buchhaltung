@@ -55,6 +55,19 @@
               </select>
             </div>
 
+            <div class="form-group">
+              <label>Rechnungsvorlage</label>
+              <select v-model="formData.template_id">
+                <option :value="null">Standard-Vorlage</option>
+                <option v-for="template in templates" :key="template.id" :value="template.id">
+                  {{ template.name }} {{ template.is_default ? '(Standard)' : '' }}
+                </option>
+              </select>
+              <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;">
+                Die Vorlage bestimmt das Design und Layout des PDF-Dokuments
+              </p>
+            </div>
+
             <div class="form-row">
               <div class="form-group">
                 <label>Leistungszeitraum Von *</label>
@@ -219,6 +232,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import MainLayout from '../layouts/MainLayout.vue'
 import axios from 'axios'
+import type { InvoiceTemplate } from '../stores/templates'
 
 const router = useRouter()
 
@@ -237,6 +251,7 @@ interface Company {
 
 const companies = ref<Company[]>([])
 const selectedCompany = ref<Company | null>(null)
+const templates = ref<InvoiceTemplate[]>([])
 const saving = ref(false)
 const error = ref('')
 const calculatingHours = ref(false)
@@ -245,6 +260,7 @@ const downloading = ref(false)
 
 const formData = ref({
   company_id: null as number | null,
+  template_id: null as number | null,
   period_start: '',
   period_end: '',
   invoice_date: new Date().toISOString().split('T')[0],
@@ -299,6 +315,23 @@ async function fetchCompanies() {
     companies.value = response.data
   } catch (err) {
     console.error('Error fetching companies:', err)
+  }
+}
+
+async function fetchTemplates() {
+  try {
+    const token = localStorage.getItem('token')
+    const response = await axios.get('http://188.245.198.220:3000/api/templates', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    templates.value = response.data
+    // Set default template as selected
+    const defaultTemplate = templates.value.find(t => t.is_default)
+    if (defaultTemplate) {
+      formData.value.template_id = defaultTemplate.id
+    }
+  } catch (err) {
+    console.error('Error fetching templates:', err)
   }
 }
 
@@ -358,6 +391,7 @@ async function createInvoice() {
     
     const payload = {
       company_id: formData.value.company_id,
+      template_id: formData.value.template_id,
       period_start: formData.value.period_start,
       period_end: formData.value.period_end,
       invoice_date: formData.value.invoice_date,
@@ -451,8 +485,11 @@ async function downloadPDF() {
 
 function createAnother() {
   createdInvoice.value = null
+  // Get default template
+  const defaultTemplate = templates.value.find(t => t.is_default)
   formData.value = {
     company_id: null,
+    template_id: defaultTemplate?.id || null,
     period_start: '',
     period_end: '',
     invoice_date: new Date().toISOString().split('T')[0],
@@ -471,6 +508,7 @@ function createAnother() {
 
 onMounted(() => {
   fetchCompanies()
+  fetchTemplates()
 })
 </script>
 
