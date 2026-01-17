@@ -232,6 +232,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import MainLayout from '../layouts/MainLayout.vue'
 import axios from 'axios'
+import type { InvoiceTemplate } from '../stores/templates'
 
 const router = useRouter()
 
@@ -250,7 +251,7 @@ interface Company {
 
 const companies = ref<Company[]>([])
 const selectedCompany = ref<Company | null>(null)
-const templates = ref<any[]>([])
+const templates = ref<InvoiceTemplate[]>([])
 const saving = ref(false)
 const error = ref('')
 const calculatingHours = ref(false)

@@ -42,11 +42,49 @@ interface InvoiceData {
   notes?: string
 }
 
+interface TemplateColors {
+  primary: string
+  secondary: string
+  text: string
+  background: string
+}
+
+interface TemplateConfig {
+  logo?: {
+    x?: number
+    y?: number
+    width?: number
+    height?: number
+    url?: string
+  }
+  logos?: Array<{
+    x?: number
+    y?: number
+    width?: number
+    height?: number
+    url?: string
+  }>
+  companyData?: {
+    name?: string
+    address?: string
+    city?: string
+    phone?: string
+    email?: string
+    website?: string
+  }
+  bankDetails?: {
+    iban?: string
+    bic?: string
+    bank?: string
+  }
+  colors?: TemplateColors
+}
+
 interface InvoiceTemplate {
   id: number
   name: string
   is_default: boolean
-  config: any
+  config: TemplateConfig
 }
 
 export function generateInvoicePDF(data: InvoiceData, res: Response, template?: InvoiceTemplate) {
@@ -108,7 +146,7 @@ export function generateInvoicePDF(data: InvoiceData, res: Response, template?: 
   let y = 65
   
   // ==================== LOGO (RECHTS OBEN) ====================
-  const logoPath = logoConfig.url.startsWith('/') 
+  const logoPath = logoConfig.url && logoConfig.url.startsWith('/') 
     ? path.join(__dirname, '../../public', logoConfig.url)
     : path.join(__dirname, '../../public/images/logo.png')
   
