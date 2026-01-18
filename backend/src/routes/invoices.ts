@@ -270,12 +270,28 @@ router.get('/:id/pdf', async (req, res) => {
     const invoice = await prisma.invoice.findUnique({
       where: { id: parseInt(id) },
       include: {
-        company: true
+        company: true,
+        template: true
       }
     })
     
     if (!invoice) {
       return res.status(404).json({ error: 'Rechnung nicht gefunden' })
+    }
+    
+    // Load template if template_id is set, otherwise use default
+    let template = invoice.template
+    if (!template && invoice.template_id) {
+      template = await prisma.invoiceTemplate.findUnique({
+        where: { id: invoice.template_id }
+      })
+    }
+    
+    // If still no template, try to load the default template
+    if (!template) {
+      template = await prisma.invoiceTemplate.findFirst({
+        where: { is_default: true }
+      })
     }
     
     const pdfData = {
@@ -314,7 +330,7 @@ router.get('/:id/pdf', async (req, res) => {
       notes: invoice.notes || undefined
     }
     
-    generateInvoicePDF(pdfData, res)
+    generateInvoicePDF(pdfData, res, template || undefined)
     
   } catch (error) {
     console.error('Error generating invoice PDF:', error)
@@ -369,6 +385,7 @@ router.post('/', authenticateToken, async (req, res) => {
       data: {
         invoice_number: invoiceNumber,
         company_id: data.company_id,
+        template_id: data.template_id || null,
         invoice_date: new Date(data.invoice_date),
         due_date: new Date(data.due_date),
         period_start: new Date(data.period_start),
@@ -395,7 +412,8 @@ router.post('/', authenticateToken, async (req, res) => {
         created_by: username
       },
       include: {
-        company: true
+        company: true,
+        template: true
       }
     })
     
