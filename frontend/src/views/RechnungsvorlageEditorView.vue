@@ -242,6 +242,7 @@ import LayersPanel from '../components/invoice-editor/LayersPanel.vue'
 
 // Constants
 const DEFAULT_TEMPLATE_ID = 'default'
+const BASE_IMAGE_DIMENSION = 200 // Base dimension for image scaling in legacy template migration
 
 // Utility function for invoice canvas storage
 function getInvoiceCanvasKey(invoiceId: number): string {
@@ -391,9 +392,6 @@ async function loadTemplate() {
         if (config.logo) {
           const { x, y, width, height, url } = config.logo
           if (url) {
-            // Base dimension for scaling - default image size before scaling
-            const BASE_IMAGE_DIMENSION = 200
-            
             // Try to load the logo image - addImage is async, so we create a placeholder if loading fails
             // The addImage method handles the Promise internally, we provide a fallback placeholder
             editorCanvas.value.addImage(url, {
@@ -470,20 +468,21 @@ async function loadTemplate() {
         if (config.table) {
           const { x, y, width, headerBg, headerText } = config.table
           
-          // Table header background
-          editorCanvas.value.addRectangle({
+          // Table header background - using addBox for consistency
+          editorCanvas.value.addBox({
             left: x,
             top: y,
             width: width || 495,
             height: 25,
             fill: headerBg || '#f3f4f6',
-            selectable: true
+            stroke: 'transparent',
+            strokeWidth: 0
           })
           
           // Table header text
           const columns = config.table.columns || []
           if (columns.length > 0) {
-            const headerLabels = columns.map((col: any) => col.name).join('  |  ')
+            const headerLabels = columns.map((col: { name: string }) => col.name).join('  |  ')
             editorCanvas.value.addText(headerLabels, {
               left: x + 10,
               top: y + 7,
