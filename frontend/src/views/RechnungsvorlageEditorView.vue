@@ -242,6 +242,7 @@ import LayersPanel from '../components/invoice-editor/LayersPanel.vue'
 
 // Constants
 const DEFAULT_TEMPLATE_ID = 'default'
+const BASE_IMAGE_DIMENSION = 200 // Base dimension for image scaling in legacy template migration
 
 // Utility function for invoice canvas storage
 function getInvoiceCanvasKey(invoiceId: number): string {
@@ -378,6 +379,147 @@ async function loadTemplate() {
         canvas!.renderAll()
         saveToHistory()
       })
+    } else if (!template.config?.canvasData && canvas && editorCanvas.value) {
+      // Migration logic: Convert legacy template format to Fabric.js objects
+      const config = template.config
+      
+      // Check if this is a legacy template with structured config
+      const hasLegacyConfig = config?.logo || config?.companyData || config?.bankDetails || 
+                             config?.footer || config?.table
+      
+      if (hasLegacyConfig) {
+        // Logo
+        if (config.logo) {
+          const { x, y, width, height, url } = config.logo
+          if (url) {
+            // Validate dimensions to prevent NaN scaling
+            const validWidth = width && width > 0 ? width : BASE_IMAGE_DIMENSION
+            const validHeight = height && height > 0 ? height : BASE_IMAGE_DIMENSION
+            
+            // Try to load the logo image - addImage is async, so we create a placeholder if loading fails
+            // The addImage method handles the Promise internally, we provide a fallback placeholder
+            editorCanvas.value.addImage(url, {
+              left: x,
+              top: y,
+              scaleX: validWidth / BASE_IMAGE_DIMENSION,
+              scaleY: validHeight / BASE_IMAGE_DIMENSION
+            })
+            
+            // Note: If the image fails to load (e.g., 404), Fabric.js will handle it silently.
+            // Users can manually add a logo later if needed.
+          } else {
+            // Create a placeholder rectangle if no URL is provided
+            editorCanvas.value.addBox({
+              left: x,
+              top: y,
+              width: width || 100,
+              height: height || 100,
+              fill: '#f0f0f0',
+              stroke: '#ccc'
+            })
+          }
+        }
+        
+        // Company Data
+        if (config.companyData) {
+          const { x, y, name, address, city, phone, email, website, fontSize, color } = config.companyData
+          const companyText = [name, address, city, phone, email, website]
+            .filter(Boolean)
+            .join('\n')
+          
+          editorCanvas.value.addText(companyText, {
+            left: x,
+            top: y,
+            fontSize: fontSize || 9,
+            fill: color || '#000000',
+            fontFamily: 'Arial'
+          })
+        }
+        
+        // Bank Details
+        if (config.bankDetails) {
+          const { x, y, iban, bic, bank, fontSize } = config.bankDetails
+          // Build bank text with only defined values to avoid 'undefined' in output
+          const bankLines = [
+            'Bankverbindung:',
+            iban ? `IBAN: ${iban}` : null,
+            bic ? `BIC: ${bic}` : null,
+            bank ? `Bank: ${bank}` : null
+          ].filter(Boolean).join('\n')
+          
+          editorCanvas.value.addText(bankLines, {
+            left: x,
+            top: y,
+            fontSize: fontSize || 7,
+            fill: '#000000',
+            fontFamily: 'Arial'
+          })
+        }
+        
+        // Footer
+        if (config.footer) {
+          const { x, y, width, text, fontSize, color } = config.footer
+          editorCanvas.value.addText(text || '', {
+            left: x,
+            top: y,
+            fontSize: fontSize || 7,
+            fill: color || '#64748b',
+            fontFamily: 'Arial',
+            width: width
+          })
+        }
+        
+        // Table - Create a visual placeholder
+        if (config.table) {
+          const { x, y, width, headerBg, headerText } = config.table
+          
+          // Table header background - using addBox for consistency
+          editorCanvas.value.addBox({
+            left: x,
+            top: y,
+            width: width || 495,
+            height: 25,
+            fill: headerBg || '#f3f4f6',
+            stroke: 'transparent',
+            strokeWidth: 0
+          })
+          
+          // Table header text
+          const columns = config.table.columns || []
+          if (columns.length > 0) {
+            const headerLabels = columns.map((col: { name: string }) => col.name).join('  |  ')
+            editorCanvas.value.addText(headerLabels, {
+              left: x + 10,
+              top: y + 7,
+              fontSize: 9,
+              fill: headerText || '#000000',
+              fontWeight: 'bold',
+              fontFamily: 'Arial'
+            })
+          }
+          
+          // Table border/outline
+          editorCanvas.value.addBox({
+            left: x,
+            top: y,
+            width: width || 495,
+            height: 150,
+            fill: 'transparent',
+            stroke: '#e5e7eb',
+            strokeWidth: 1
+          })
+        }
+        
+        // Render canvas and save to history
+        try {
+          canvas.renderAll()
+          saveToHistory()
+          showToastMessage('Altes Vorlagenformat konvertiert', 'success')
+        } catch (error) {
+          console.error('Failed to render canvas or save history:', error)
+          showToastMessage('Vorlage konvertiert, aber Speichern fehlgeschlagen', 'error')
+        }
+      }
     }
   } catch (error) {
     console.error('Failed to load template:', error)
