@@ -392,13 +392,17 @@ async function loadTemplate() {
         if (config.logo) {
           const { x, y, width, height, url } = config.logo
           if (url) {
+            // Validate dimensions to prevent NaN scaling
+            const validWidth = width && width > 0 ? width : BASE_IMAGE_DIMENSION
+            const validHeight = height && height > 0 ? height : BASE_IMAGE_DIMENSION
+            
             // Try to load the logo image - addImage is async, so we create a placeholder if loading fails
             // The addImage method handles the Promise internally, we provide a fallback placeholder
             editorCanvas.value.addImage(url, {
               left: x,
               top: y,
-              scaleX: width / BASE_IMAGE_DIMENSION,
-              scaleY: height / BASE_IMAGE_DIMENSION
+              scaleX: validWidth / BASE_IMAGE_DIMENSION,
+              scaleY: validHeight / BASE_IMAGE_DIMENSION
             })
             
             // Note: If the image fails to load (e.g., 404), Fabric.js will handle it silently.
@@ -408,8 +412,8 @@ async function loadTemplate() {
             editorCanvas.value.addBox({
               left: x,
               top: y,
-              width: width,
-              height: height,
+              width: width || 100,
+              height: height || 100,
               fill: '#f0f0f0',
               stroke: '#ccc'
             })
@@ -435,14 +439,15 @@ async function loadTemplate() {
         // Bank Details
         if (config.bankDetails) {
           const { x, y, iban, bic, bank, fontSize } = config.bankDetails
-          const bankText = [
+          // Build bank text with only defined values to avoid 'undefined' in output
+          const bankLines = [
             'Bankverbindung:',
-            `IBAN: ${iban}`,
-            `BIC: ${bic}`,
-            `Bank: ${bank}`
+            iban ? `IBAN: ${iban}` : null,
+            bic ? `BIC: ${bic}` : null,
+            bank ? `Bank: ${bank}` : null
           ].filter(Boolean).join('\n')
           
-          editorCanvas.value.addText(bankText, {
+          editorCanvas.value.addText(bankLines, {
             left: x,
             top: y,
             fontSize: fontSize || 7,
