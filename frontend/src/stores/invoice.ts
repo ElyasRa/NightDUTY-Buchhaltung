@@ -88,7 +88,7 @@ export const useInvoiceStore = defineStore('invoice', {
         try {
           this.currentInvoice = JSON.parse(stored)
         } catch (e) {
-          console.error('Failed to parse stored invoice:', e)
+          console.error('Failed to parse stored invoice from session storage:', e)
           sessionStorage.removeItem('currentInvoice')
         }
       }

@@ -240,6 +240,14 @@ import ElementLibrary from '../components/invoice-editor/ElementLibrary.vue'
 import PropertiesPanel from '../components/invoice-editor/PropertiesPanel.vue'
 import LayersPanel from '../components/invoice-editor/LayersPanel.vue'
 
+// Constants
+const DEFAULT_TEMPLATE_ID = 'default'
+
+// Utility function for invoice canvas storage
+function getInvoiceCanvasKey(invoiceId: number): string {
+  return `invoice_${invoiceId}_canvas`
+}
+
 const route = useRoute()
 const router = useRouter()
 const templateStore = useTemplateStore()
@@ -331,7 +339,7 @@ onMounted(async () => {
   
   // Get template ID from route
   const id = route.params.id
-  if (id && id !== 'new' && id !== 'default') {
+  if (id && id !== 'new' && id !== DEFAULT_TEMPLATE_ID) {
     templateId.value = parseInt(id as string)
     await loadTemplate()
   } else {
@@ -624,7 +632,7 @@ async function saveTemplate() {
       // Store the modified canvas data in session storage for this invoice
       if (currentInvoiceId.value) {
         sessionStorage.setItem(
-          `invoice_${currentInvoiceId.value}_canvas`,
+          getInvoiceCanvasKey(currentInvoiceId.value),
           JSON.stringify(canvasData)
         )
       }

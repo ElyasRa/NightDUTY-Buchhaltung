@@ -30,7 +30,7 @@
           <div class="invoice-details">
             <div class="detail-row">
               <span class="detail-label">Firma:</span>
-              <span class="detail-value">{{ invoiceStore.currentInvoice.company?.name }}</span>
+              <span class="detail-value">{{ invoiceStore.currentInvoice.company?.name || 'Keine Firma' }}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">Betrag:</span>
@@ -109,6 +109,9 @@ import type { InvoiceTemplate } from '../stores/templates'
 import MainLayout from '../layouts/MainLayout.vue'
 import TemplateCard from '../components/templates/TemplateCard.vue'
 
+// Constants
+const DEFAULT_TEMPLATE_ID = 'default'
+
 const router = useRouter()
 const templateStore = useTemplateStore()
 const invoiceStore = useInvoiceStore()
@@ -147,7 +150,7 @@ function editTemplate(template: InvoiceTemplate) {
 function editCurrentInvoice() {
   if (!invoiceStore.currentInvoice) return
   
-  const templateId = invoiceStore.currentInvoice.template_id || 'default'
+  const templateId = invoiceStore.currentInvoice.template_id || DEFAULT_TEMPLATE_ID
   router.push(`/rechnungsvorlage/editor/${templateId}?invoiceId=${invoiceStore.currentInvoice.id}`)
 }
 

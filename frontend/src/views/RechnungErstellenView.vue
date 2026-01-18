@@ -242,6 +242,9 @@ import axios from 'axios'
 import type { InvoiceTemplate } from '../stores/templates'
 import { useInvoiceStore } from '../stores/invoice'
 
+// Constants
+const DEFAULT_TEMPLATE_ID = 'default'
+
 const router = useRouter()
 const invoiceStore = useInvoiceStore()
 
@@ -523,7 +526,7 @@ function editInvoiceInTemplate() {
   invoiceStore.setCurrentInvoice(createdInvoice.value)
   
   // Navigate to template editor with invoice mode
-  const templateId = createdInvoice.value.template_id || 'default'
+  const templateId = createdInvoice.value.template_id || DEFAULT_TEMPLATE_ID
   router.push(`/rechnungsvorlage/editor/${templateId}?invoiceId=${createdInvoice.value.id}`)
 }
 
