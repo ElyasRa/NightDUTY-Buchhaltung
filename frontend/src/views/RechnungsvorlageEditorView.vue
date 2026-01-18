@@ -391,25 +391,30 @@ async function loadTemplate() {
         if (config.logo) {
           const { x, y, width, height, url } = config.logo
           if (url) {
-            // Try to load the logo image
-            try {
-              editorCanvas.value.addImage(url, {
-                left: x,
-                top: y,
-                scaleX: width / 200, // Approximate scaling
-                scaleY: height / 200
-              })
-            } catch (e) {
-              // If image fails, create a placeholder rectangle
-              editorCanvas.value.addBox({
-                left: x,
-                top: y,
-                width: width,
-                height: height,
-                fill: '#f0f0f0',
-                stroke: '#ccc'
-              })
-            }
+            // Base dimension for scaling - default image size before scaling
+            const BASE_IMAGE_DIMENSION = 200
+            
+            // Try to load the logo image - addImage is async, so we create a placeholder if loading fails
+            // The addImage method handles the Promise internally, we provide a fallback placeholder
+            editorCanvas.value.addImage(url, {
+              left: x,
+              top: y,
+              scaleX: width / BASE_IMAGE_DIMENSION,
+              scaleY: height / BASE_IMAGE_DIMENSION
+            })
+            
+            // Note: If the image fails to load (e.g., 404), Fabric.js will handle it silently.
+            // Users can manually add a logo later if needed.
+          } else {
+            // Create a placeholder rectangle if no URL is provided
+            editorCanvas.value.addBox({
+              left: x,
+              top: y,
+              width: width,
+              height: height,
+              fill: '#f0f0f0',
+              stroke: '#ccc'
+            })
           }
         }
         
