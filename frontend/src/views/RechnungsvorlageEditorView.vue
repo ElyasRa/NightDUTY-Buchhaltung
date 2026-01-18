@@ -378,6 +378,133 @@ async function loadTemplate() {
         canvas!.renderAll()
         saveToHistory()
       })
+    } else if (!template.config?.canvasData && canvas && editorCanvas.value) {
+      // Migration logic: Convert legacy template format to Fabric.js objects
+      const config = template.config
+      
+      // Check if this is a legacy template with structured config
+      const hasLegacyConfig = config?.logo || config?.companyData || config?.bankDetails || 
+                             config?.footer || config?.table
+      
+      if (hasLegacyConfig) {
+        // Logo
+        if (config.logo) {
+          const { x, y, width, height, url } = config.logo
+          if (url) {
+            // Try to load the logo image
+            try {
+              editorCanvas.value.addImage(url, {
+                left: x,
+                top: y,
+                scaleX: width / 200, // Approximate scaling
+                scaleY: height / 200
+              })
+            } catch (e) {
+              // If image fails, create a placeholder rectangle
+              editorCanvas.value.addBox({
+                left: x,
+                top: y,
+                width: width,
+                height: height,
+                fill: '#f0f0f0',
+                stroke: '#ccc'
+              })
+            }
+          }
+        }
+        
+        // Company Data
+        if (config.companyData) {
+          const { x, y, name, address, city, phone, email, website, fontSize, color } = config.companyData
+          const companyText = [name, address, city, phone, email, website]
+            .filter(Boolean)
+            .join('\n')
+          
+          editorCanvas.value.addText(companyText, {
+            left: x,
+            top: y,
+            fontSize: fontSize || 9,
+            fill: color || '#000000',
+            fontFamily: 'Arial'
+          })
+        }
+        
+        // Bank Details
+        if (config.bankDetails) {
+          const { x, y, iban, bic, bank, fontSize } = config.bankDetails
+          const bankText = [
+            'Bankverbindung:',
+            `IBAN: ${iban}`,
+            `BIC: ${bic}`,
+            `Bank: ${bank}`
+          ].filter(Boolean).join('\n')
+          
+          editorCanvas.value.addText(bankText, {
+            left: x,
+            top: y,
+            fontSize: fontSize || 7,
+            fill: '#000000',
+            fontFamily: 'Arial'
+          })
+        }
+        
+        // Footer
+        if (config.footer) {
+          const { x, y, width, text, fontSize, color } = config.footer
+          editorCanvas.value.addText(text || '', {
+            left: x,
+            top: y,
+            fontSize: fontSize || 7,
+            fill: color || '#64748b',
+            fontFamily: 'Arial',
+            width: width
+          })
+        }
+        
+        // Table - Create a visual placeholder
+        if (config.table) {
+          const { x, y, width, headerBg, headerText } = config.table
+          
+          // Table header background
+          editorCanvas.value.addRectangle({
+            left: x,
+            top: y,
+            width: width || 495,
+            height: 25,
+            fill: headerBg || '#f3f4f6',
+            selectable: true
+          })
+          
+          // Table header text
+          const columns = config.table.columns || []
+          if (columns.length > 0) {
+            const headerLabels = columns.map((col: any) => col.name).join('  |  ')
+            editorCanvas.value.addText(headerLabels, {
+              left: x + 10,
+              top: y + 7,
+              fontSize: 9,
+              fill: headerText || '#000000',
+              fontWeight: 'bold',
+              fontFamily: 'Arial'
+            })
+          }
+          
+          // Table border/outline
+          editorCanvas.value.addBox({
+            left: x,
+            top: y,
+            width: width || 495,
+            height: 150,
+            fill: 'transparent',
+            stroke: '#e5e7eb',
+            strokeWidth: 1
+          })
+        }
+        
+        canvas.renderAll()
+        saveToHistory()
+        showToastMessage('Altes Vorlagenformat konvertiert', 'success')
+      }
     }
   } catch (error) {
     console.error('Failed to load template:', error)
