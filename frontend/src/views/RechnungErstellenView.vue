@@ -27,6 +27,13 @@
           </div>
           
           <div class="success-actions">
+            <button @click="editInvoiceInTemplate" class="btn-edit">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Rechnung im Editor bearbeiten
+            </button>
             <button @click="downloadPDF" class="btn-download" :disabled="downloading">
               <svg viewBox="0 0 24 24" fill="none">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -233,8 +240,13 @@ import { useRouter } from 'vue-router'
 import MainLayout from '../layouts/MainLayout.vue'
 import axios from 'axios'
 import type { InvoiceTemplate } from '../stores/templates'
+import { useInvoiceStore } from '../stores/invoice'
+
+// Constants
+const DEFAULT_TEMPLATE_ID = 'default'
 
 const router = useRouter()
+const invoiceStore = useInvoiceStore()
 
 interface Company {
   id: number
@@ -485,6 +497,7 @@ async function downloadPDF() {
 
 function createAnother() {
   createdInvoice.value = null
+  invoiceStore.clearCurrentInvoice()
   // Get default template
   const defaultTemplate = templates.value.find(t => t.is_default)
   formData.value = {
@@ -504,6 +517,17 @@ function createAnother() {
     notes: ''
   }
   selectedCompany.value = null
+}
+
+function editInvoiceInTemplate() {
+  if (!createdInvoice.value) return
+  
+  // Store the current invoice in the invoice store
+  invoiceStore.setCurrentInvoice(createdInvoice.value)
+  
+  // Navigate to template editor with invoice mode
+  const templateId = createdInvoice.value.template_id || DEFAULT_TEMPLATE_ID
+  router.push(`/rechnungsvorlage/editor/${templateId}?invoiceId=${createdInvoice.value.id}`)
 }
 
 onMounted(() => {
@@ -610,6 +634,33 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.btn-edit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #ff006e 0%, #8338ec 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 8px 24px rgba(255, 0, 110, 0.3);
+}
+
+.btn-edit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(255, 0, 110, 0.4);
+}
+
+.btn-edit svg {
+  width: 24px;
+  height: 24px;
 }
 
 .btn-download {
