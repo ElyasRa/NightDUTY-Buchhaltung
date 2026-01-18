@@ -17,6 +17,40 @@
         </div>
       </div>
 
+      <!-- Current Invoice Section (if exists) -->
+      <div v-if="invoiceStore.currentInvoice" class="current-invoice-section">
+        <div class="current-invoice-card">
+          <div class="current-invoice-header">
+            <div class="invoice-icon">📋</div>
+            <div class="invoice-info">
+              <h3>Aktuelle Rechnung</h3>
+              <p class="invoice-number">{{ invoiceStore.currentInvoice.invoice_number }}</p>
+            </div>
+          </div>
+          <div class="invoice-details">
+            <div class="detail-row">
+              <span class="detail-label">Firma:</span>
+              <span class="detail-value">{{ invoiceStore.currentInvoice.company?.name }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Betrag:</span>
+              <span class="detail-value">{{ invoiceStore.currentInvoice.total_amount.toFixed(2) }} €</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Status:</span>
+              <span class="detail-value status">{{ invoiceStore.currentInvoice.status === 'open' ? 'Offen' : 'Bezahlt' }}</span>
+            </div>
+          </div>
+          <button @click="editCurrentInvoice" class="btn-edit-invoice">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Rechnung bearbeiten
+          </button>
+        </div>
+      </div>
+
       <!-- Template List View -->
       <div>
         <div v-if="loading" class="loading-container">
@@ -70,12 +104,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTemplateStore } from '../stores/templates'
+import { useInvoiceStore } from '../stores/invoice'
 import type { InvoiceTemplate } from '../stores/templates'
 import MainLayout from '../layouts/MainLayout.vue'
 import TemplateCard from '../components/templates/TemplateCard.vue'
 
 const router = useRouter()
 const templateStore = useTemplateStore()
+const invoiceStore = useInvoiceStore()
 
 const loading = ref(false)
 const showDeleteModal = ref(false)
@@ -90,6 +126,8 @@ onMounted(async () => {
   loading.value = true
   try {
     await templateStore.fetchTemplates()
+    // Load current invoice from session if it exists
+    invoiceStore.loadCurrentInvoiceFromSession()
   } catch (error) {
     console.error('Failed to load templates:', error)
     showToastMessage('Fehler beim Laden der Vorlagen', 'error')
@@ -104,6 +142,13 @@ function createNewTemplate() {
 
 function editTemplate(template: InvoiceTemplate) {
   router.push(`/rechnungsvorlage/editor/${template.id}`)
+}
+
+function editCurrentInvoice() {
+  if (!invoiceStore.currentInvoice) return
+  
+  const templateId = invoiceStore.currentInvoice.template_id || 'default'
+  router.push(`/rechnungsvorlage/editor/${templateId}?invoiceId=${invoiceStore.currentInvoice.id}`)
 }
 
 function confirmDelete(template: InvoiceTemplate) {
@@ -226,6 +271,107 @@ function showToastMessage(message: string, type: string = 'success') {
 
 .btn-primary svg,
 .btn-secondary svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Current Invoice Section */
+.current-invoice-section {
+  padding: 1.5rem 2rem;
+  background: rgba(20, 20, 20, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.current-invoice-card {
+  background: linear-gradient(135deg, rgba(255, 0, 110, 0.15) 0%, rgba(131, 56, 236, 0.15) 100%);
+  border: 1px solid rgba(255, 0, 110, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 600px;
+  box-shadow: 0 4px 12px rgba(255, 0, 110, 0.2);
+}
+
+.current-invoice-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.invoice-icon {
+  font-size: 2.5rem;
+}
+
+.invoice-info h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 0.25rem 0;
+}
+
+.invoice-number {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ff006e;
+  margin: 0;
+}
+
+.invoice-details {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.detail-value {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+}
+
+.detail-value.status {
+  color: #10b981;
+}
+
+.btn-edit-invoice {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #ff006e 0%, #8338ec 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-edit-invoice:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 0, 110, 0.4);
+}
+
+.btn-edit-invoice svg {
   width: 18px;
   height: 18px;
 }

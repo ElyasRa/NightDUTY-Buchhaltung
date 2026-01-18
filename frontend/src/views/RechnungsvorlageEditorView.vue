@@ -14,8 +14,10 @@
             v-model="templateName" 
             type="text" 
             class="template-name-input"
-            placeholder="Vorlagenname"
+            :placeholder="isInvoiceMode ? 'Rechnungsbezeichnung' : 'Vorlagenname'"
+            :readonly="isInvoiceMode"
           />
+          <span v-if="isInvoiceMode" class="invoice-mode-badge">📋 Rechnung</span>
         </div>
 
         <div class="header-right">
@@ -37,7 +39,7 @@
               <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2"/>
               <polyline points="17 21 17 13 7 13 7 21" stroke="currentColor" stroke-width="2"/>
             </svg>
-            {{ saving ? 'Speichert...' : 'Speichern' }}
+            {{ saving ? 'Speichert...' : (isInvoiceMode ? 'Änderungen speichern' : 'Speichern') }}
           </button>
         </div>
       </div>
@@ -229,6 +231,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTemplateStore } from '../stores/templates'
+import { useInvoiceStore } from '../stores/invoice'
 import type { Canvas, FabricObject } from 'fabric'
 import MainLayout from '../layouts/MainLayout.vue'
 import EditorCanvas from '../components/invoice-editor/EditorCanvas.vue'
@@ -240,6 +243,7 @@ import LayersPanel from '../components/invoice-editor/LayersPanel.vue'
 const route = useRoute()
 const router = useRouter()
 const templateStore = useTemplateStore()
+const invoiceStore = useInvoiceStore()
 
 const editorCanvas = ref<InstanceType<typeof EditorCanvas> | null>(null)
 let canvas: Canvas | null = null
@@ -255,6 +259,10 @@ const saving = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
 const toastType = ref('success')
+
+// Invoice editing mode
+const isInvoiceMode = ref(false)
+const currentInvoiceId = ref<number | null>(null)
 
 // Preview modal
 const previewModalVisible = ref(false)
@@ -307,13 +315,27 @@ const layers = computed(() => {
 })
 
 onMounted(async () => {
+  // Check if we're in invoice editing mode
+  const invoiceIdParam = route.query.invoiceId
+  if (invoiceIdParam) {
+    isInvoiceMode.value = true
+    currentInvoiceId.value = parseInt(invoiceIdParam as string)
+    
+    // Load current invoice from store or session
+    invoiceStore.loadCurrentInvoiceFromSession()
+    
+    if (invoiceStore.currentInvoice) {
+      templateName.value = `Rechnung ${invoiceStore.currentInvoice.invoice_number}`
+    }
+  }
+  
   // Get template ID from route
   const id = route.params.id
-  if (id && id !== 'new') {
+  if (id && id !== 'new' && id !== 'default') {
     templateId.value = parseInt(id as string)
     await loadTemplate()
   } else {
-    // Initialize new template
+    // Initialize new template or use default
     saveToHistory()
   }
 
@@ -594,39 +616,63 @@ async function saveTemplate() {
   try {
     const canvasData = canvas.toJSON()
     
-    const template = {
-      id: templateId.value || undefined,
-      name: templateName.value,
-      is_default: false,
-      config: {
-        canvasData,
-        colors: {
-          primary: '#1e3a8a',
-          secondary: '#6b7280',
-          text: '#000000',
-          background: '#ffffff'
+    if (isInvoiceMode.value) {
+      // In invoice mode, we save the canvas data to be used for this specific invoice
+      // This will be used when generating the PDF for this invoice
+      showToastMessage('Änderungen für Rechnung wurden gespeichert', 'success')
+      
+      // Store the modified canvas data in session storage for this invoice
+      if (currentInvoiceId.value) {
+        sessionStorage.setItem(
+          `invoice_${currentInvoiceId.value}_canvas`,
+          JSON.stringify(canvasData)
+        )
+      }
+    } else {
+      // Normal template saving
+      const template = {
+        id: templateId.value || undefined,
+        name: templateName.value,
+        is_default: false,
+        config: {
+          canvasData,
+          colors: {
+            primary: '#1e3a8a',
+            secondary: '#6b7280',
+            text: '#000000',
+            background: '#ffffff'
+          }
         }
       }
-    }
 
-    const saved = await templateStore.saveTemplate(template)
-    
-    if (!templateId.value) {
-      templateId.value = saved.id
-      // Update URL
-      router.replace(`/rechnungsvorlage/editor/${saved.id}`)
-    }
+      const saved = await templateStore.saveTemplate(template)
+      
+      if (!templateId.value) {
+        templateId.value = saved.id
+        // Update URL
+        router.replace(`/rechnungsvorlage/editor/${saved.id}`)
+      }
 
-    showToastMessage('Vorlage erfolgreich gespeichert', 'success')
+      showToastMessage('Vorlage erfolgreich gespeichert', 'success')
+    }
   } catch (error) {
-    console.error('Failed to save template:', error)
-    showToastMessage('Fehler beim Speichern der Vorlage', 'error')
+    console.error('Failed to save:', error)
+    showToastMessage(
+      isInvoiceMode.value 
+        ? 'Fehler beim Speichern der Rechnung' 
+        : 'Fehler beim Speichern der Vorlage', 
+      'error'
+    )
   } finally {
     saving.value = false
   }
 }
 
 function goBack() {
+  if (isInvoiceMode.value) {
+    // Clear invoice mode and go back to template list
+    invoiceStore.clearCurrentInvoice()
+  }
   router.push('/rechnungsvorlage')
 }
 
@@ -806,6 +852,16 @@ function saveCompanyData() {
 .template-name-input:focus {
   outline: none;
   border-color: #ff006e;
+}
+
+.invoice-mode-badge {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #ff006e 0%, #8338ec 100%);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 6px;
+  white-space: nowrap;
 }
 
 .btn-save {
