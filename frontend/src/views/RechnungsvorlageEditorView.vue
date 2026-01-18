@@ -510,9 +510,15 @@ async function loadTemplate() {
           })
         }
         
-        canvas.renderAll()
-        saveToHistory()
-        showToastMessage('Altes Vorlagenformat konvertiert', 'success')
+        // Render canvas and save to history
+        try {
+          canvas.renderAll()
+          saveToHistory()
+          showToastMessage('Altes Vorlagenformat konvertiert', 'success')
+        } catch (error) {
+          console.error('Failed to render canvas or save history:', error)
+          showToastMessage('Vorlage konvertiert, aber Speichern fehlgeschlagen', 'error')
+        }
       }
     }
   } catch (error) {
